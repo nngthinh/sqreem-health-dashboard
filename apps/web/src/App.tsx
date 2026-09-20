@@ -17,7 +17,7 @@ function getGreeting(me: Me | undefined) {
 
 /** Each route gets its own copy in the header's title slot. */
 function getPageTitle(pathname: string, me: Me | undefined) {
-  if (pathname.startsWith('/chat')) return 'Chat history'
+  if (pathname.startsWith('/chats')) return 'Chat history'
   if (pathname.startsWith('/metric')) return 'Metric detail'
 
   return getGreeting(me)

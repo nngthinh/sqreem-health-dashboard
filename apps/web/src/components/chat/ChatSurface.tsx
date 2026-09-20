@@ -1,5 +1,6 @@
 import { type ChatView, MessageRole, MetricIdSchema } from '@health/shared/schema'
-import { useEffect, useRef } from 'react'
+import { ChevronDown } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router'
 import { useChatStream } from '../../features/chat/useChatStream'
 import { useAppDispatch, useAppSelector } from '../../store'
@@ -11,13 +12,6 @@ import { Composer } from './Composer'
 import { ConversationList } from './ConversationList'
 import { MessageBubble } from './MessageBubble'
 import { ToolChip } from './ToolChip'
-
-const SUGGESTIONS = [
-  'How am I doing overall?',
-  'Why have my steps dropped?',
-  "How's my sleep really?",
-  'What should I focus on this week?',
-]
 
 const METRIC_ROUTE = /^\/metric\/([a-z]+)$/
 
@@ -40,6 +34,9 @@ export function ChatSurface({ conversationId }: { conversationId: string | null 
 
   const [createConversation] = useCreateConversationMutation()
   const thread = useGetConversationQuery(conversationId ?? '', { skip: !conversationId })
+
+  // On a phone the list would eat the whole screen, so it collapses behind a header.
+  const [isListOpen, setIsListOpen] = useState(false)
 
   const scrollRef = useRef<HTMLDivElement>(null)
 
@@ -71,10 +68,20 @@ export function ChatSurface({ conversationId }: { conversationId: string | null 
     if (!id) {
       const created = await createConversation({ firstMessage: message }).unwrap()
       id = created.id
-      await navigate(`/chat/${id}`, { replace: true })
+      await navigate(`/chats/${id}`, { replace: true })
     }
 
     await send(id, message, view)
+  }
+
+  const handleSelect = (id: string) => {
+    setIsListOpen(false)
+    void navigate(`/chats/${id}`)
+  }
+
+  const handleNew = () => {
+    setIsListOpen(false)
+    void navigate('/chats')
   }
 
   const handleRetry = () => {
@@ -82,7 +89,14 @@ export function ChatSurface({ conversationId }: { conversationId: string | null 
   }
 
   const handleDeleted = (id: string) => {
-    if (id === conversationId) void navigate('/chat')
+    if (id === conversationId) void navigate('/chats')
+  }
+
+  const listProps = {
+    activeId: conversationId,
+    onSelect: handleSelect,
+    onNew: handleNew,
+    onDeleted: handleDeleted,
   }
 
   const renderThread = () => {
@@ -109,36 +123,36 @@ export function ChatSurface({ conversationId }: { conversationId: string | null 
   }
 
   return (
-    <div className="mx-auto flex h-[calc(100dvh-8rem)] max-w-5xl overflow-hidden rounded-card border border-line">
-      <div className="hidden w-56 shrink-0 md:block">
-        <ConversationList
-          activeId={conversationId}
-          onSelect={(id) => void navigate(`/chat/${id}`)}
-          onNew={() => void navigate('/chat')}
-          onDeleted={handleDeleted}
-        />
+    <div className="flex h-full min-h-0">
+      <div className="hidden w-60 shrink-0 border-r border-line md:block">
+        <ConversationList {...listProps} />
       </div>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto p-4">
-          {!conversationId && (
-            <div className="space-y-2">
-              <p className="text-sm text-ink-muted">Ask about your own data.</p>
+        <div className="border-b border-line md:hidden">
+          <button
+            type="button"
+            aria-expanded={isListOpen}
+            onClick={() => setIsListOpen((open) => !open)}
+            className="flex w-full items-center justify-between px-3 py-2 text-sm text-ink-muted"
+          >
+            Your chats
+            <ChevronDown
+              size={16}
+              aria-hidden="true"
+              className={isListOpen ? 'rotate-180 transition-transform' : 'transition-transform'}
+            />
+          </button>
 
-              <div className="flex flex-wrap gap-2">
-                {SUGGESTIONS.map((suggestion) => (
-                  <button
-                    key={suggestion}
-                    type="button"
-                    onClick={() => void handleSubmit(suggestion)}
-                    className="rounded-full border border-line px-3 py-1.5 text-xs text-ink-muted hover:border-ink-muted"
-                  >
-                    {suggestion}
-                  </button>
-                ))}
-              </div>
+          {isListOpen && (
+            <div className="max-h-64 overflow-y-auto border-t border-line">
+              <ConversationList {...listProps} />
             </div>
           )}
+        </div>
+
+        <div ref={scrollRef} className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4">
+          {!conversationId && <ChatStarter onPick={(message) => void handleSubmit(message)} />}
 
           {conversationId && renderThread()}
 
@@ -167,6 +181,35 @@ export function ChatSurface({ conversationId }: { conversationId: string | null 
           initialValue={prefill}
           onSend={(message) => void handleSubmit(message)}
         />
+      </div>
+    </div>
+  )
+}
+
+const SUGGESTIONS = [
+  'How am I doing overall?',
+  'Why have my steps dropped?',
+  "How's my sleep really?",
+  'What should I focus on this week?',
+]
+
+/** An empty thread is mostly empty space, so the invitation sits in the middle of it. */
+function ChatStarter({ onPick }: { onPick: (message: string) => void }) {
+  return (
+    <div className="m-auto max-w-xl space-y-3 text-center">
+      <p className="text-sm text-ink-muted">Ask about your own data.</p>
+
+      <div className="flex flex-wrap justify-center gap-2">
+        {SUGGESTIONS.map((suggestion) => (
+          <button
+            key={suggestion}
+            type="button"
+            onClick={() => onPick(suggestion)}
+            className="rounded-full border border-line px-3 py-1.5 text-xs text-ink-muted hover:border-ink-muted"
+          >
+            {suggestion}
+          </button>
+        ))}
       </div>
     </div>
   )

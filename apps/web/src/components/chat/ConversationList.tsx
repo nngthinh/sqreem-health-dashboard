@@ -101,7 +101,7 @@ export function ConversationList({ activeId, onSelect, onNew, onDeleted }: Conve
   }
 
   return (
-    <div className="flex h-full flex-col border-r border-line">
+    <div className="flex h-full flex-col">
       <button
         type="button"
         onClick={onNew}

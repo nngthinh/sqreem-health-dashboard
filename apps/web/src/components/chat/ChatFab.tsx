@@ -17,14 +17,14 @@ export function ChatFab() {
   const { pathname } = useLocation()
 
   // Inside chat, the composer is the entry point and a floating one would compete.
-  if (pathname.startsWith('/chat')) return null
+  if (pathname.startsWith('/chats')) return null
 
   const handleClick = () => {
     const params = new URLSearchParams({ from: pathname })
     const seed = seedQuestion(pathname)
     if (seed) params.set('q', seed)
 
-    void navigate(`/chat?${params}`)
+    void navigate(`/chats?${params}`)
   }
 
   return (
