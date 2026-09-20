@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { InsightBlockSchema, normaliseBlock } from '../blocks'
+import { BlockKind, InsightBlockSchema, normaliseBlock } from '../blocks'
 
 describe('InsightBlockSchema', () => {
   it('accepts a metric block with a legal range', () => {
@@ -39,9 +39,9 @@ describe('InsightBlockSchema', () => {
 
 describe('normaliseBlock', () => {
   it('freezes a relative range into absolute dates', () => {
-    const block = { kind: 'metric', metricId: 'sleep', range: 30 } as const
+    const block = { kind: BlockKind.Metric, metricId: 'sleep', range: 30 } as const
     expect(normaliseBlock(block, '2026-09-20')).toEqual({
-      kind: 'metric',
+      kind: BlockKind.Metric,
       metricId: 'sleep',
       period: { from: '2026-08-22', to: '2026-09-20' },
     })
@@ -49,7 +49,7 @@ describe('normaliseBlock', () => {
 
   it('leaves a comparison block, which is already absolute, untouched', () => {
     const block = {
-      kind: 'comparison',
+      kind: BlockKind.Comparison,
       metricId: 'steps',
       periodA: { from: '2026-09-14', to: '2026-09-20' },
       periodB: { from: '2026-09-07', to: '2026-09-13' },

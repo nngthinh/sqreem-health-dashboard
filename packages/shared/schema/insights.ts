@@ -1,4 +1,27 @@
+import { z } from 'zod'
 import type { GoalId, MetricId, Range } from './ids'
+
+/** Shared three-state health judgement: readiness band, goal status, signal severity. */
+export enum Band {
+  Good = 'good',
+  Steady = 'steady',
+  Watch = 'watch',
+}
+
+export enum Direction {
+  Up = 'up',
+  Down = 'down',
+  Flat = 'flat',
+}
+
+export enum Confidence {
+  Full = 'full',
+  Partial = 'partial',
+}
+
+export const BandSchema = z.enum(Band)
+export const DirectionSchema = z.enum(Direction)
+export const ConfidenceSchema = z.enum(Confidence)
 
 export type ReadinessDriver = {
   metricId: MetricId
@@ -8,14 +31,14 @@ export type ReadinessDriver = {
   target: number | null
   /** signed fraction: -0.17 means 17% below target/baseline */
   deviation: number
-  direction: 'up' | 'down' | 'flat'
+  direction: Direction
   explanation: string
 }
 
 export type Readiness = {
   score: number | null
-  band: 'good' | 'steady' | 'watch'
-  confidence: 'full' | 'partial'
+  band: Band
+  confidence: Confidence
   droppedTerms: MetricId[]
   drivers: ReadinessDriver[]
 }
@@ -29,7 +52,7 @@ export type Trend = {
   current: number | null
   previous: number | null
   deltaPct: number | null
-  direction: 'up' | 'down' | 'flat'
+  direction: Direction
   significant: boolean
   sampleDays: number
   series: SparkPoint[]
@@ -48,12 +71,12 @@ export type GoalProgress = {
   met: number
   /** days in range with a recorded value — gaps are excluded, not zeroed */
   of: number
-  status: 'good' | 'steady' | 'watch'
+  status: Band
 } | null
 
 export type Signal = {
   id: string
-  severity: 'good' | 'steady' | 'watch'
+  severity: Band
   title: string
   detail: string
   metricIds: MetricId[]

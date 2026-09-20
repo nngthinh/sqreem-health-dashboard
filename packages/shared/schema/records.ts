@@ -1,10 +1,19 @@
 import { z } from 'zod'
 import { GoalIdSchema, MetricIdSchema } from './ids'
 
+export enum WorkoutType {
+  Walk = 'walk',
+  Run = 'run',
+  Strength = 'strength',
+  Cycle = 'cycle',
+}
+
+export const WorkoutTypeSchema = z.enum(WorkoutType)
+
 export const IsoDateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'expected YYYY-MM-DD')
 
 export const WorkoutSchema = z.object({
-  type: z.enum(['walk', 'run', 'strength', 'cycle']),
+  type: WorkoutTypeSchema,
   durationMin: z.number().int().positive(),
   calories: z.number().int().nonnegative(),
 })

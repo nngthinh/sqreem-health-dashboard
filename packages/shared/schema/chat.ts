@@ -10,11 +10,18 @@ export const ChatRequestSchema = z.object({
 })
 export type ChatRequest = z.infer<typeof ChatRequestSchema>
 
+export enum MessageRole {
+  User = 'user',
+  Assistant = 'assistant',
+}
+
+export const MessageRoleSchema = z.enum(MessageRole)
+
 export type ToolExchange = { name: string; args: unknown; response: unknown }
 
 export type ChatMessage = {
   id: string
-  role: 'user' | 'assistant'
+  role: MessageRole
   content: string
   blocks: InsightBlock[]
   toolCalls: ToolExchange[]
