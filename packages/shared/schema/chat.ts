@@ -17,7 +17,13 @@ export enum MessageRole {
 
 export const MessageRoleSchema = z.enum(MessageRole)
 
-export type ToolExchange = { name: string; args: unknown; response: unknown }
+/**
+ * `asOf` is the day the tool was run against, not a wall-clock instant: health data has
+ * daily granularity, so the day is what decides whether a figure is still current.
+ * Exchanges are kept for the life of the conversation — the stamp is what lets an old
+ * one read as history rather than being mistaken for today's numbers.
+ */
+export type ToolExchange = { name: string; args: unknown; response: unknown; asOf: string }
 
 export type ChatMessage = {
   id: string

@@ -116,10 +116,10 @@ describe('corroboration', () => {
 })
 
 describe('getDatasetFor', () => {
-  it('resolves every user to the Maya fixture, the multi-tenancy seam', () => {
+  it('resolves every user to the Daniel fixture, the multi-tenancy seam', () => {
     const a = getDatasetFor('user-a', END)
     const b = getDatasetFor('user-b', END)
-    expect(a.persona.name).toBe('Maya Chen')
+    expect(a.persona.name).toBe('Daniel Tan')
     expect(a.records).toEqual(b.records)
   })
 

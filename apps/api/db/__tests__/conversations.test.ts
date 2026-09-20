@@ -80,7 +80,12 @@ describe('messages', () => {
         content: 'Weeknights are short.',
         blocks: [{ kind: BlockKind.Metric, metricId: 'sleep', range: 30 }],
         toolCalls: [
-          { name: 'get_goal_progress', args: { goalId: 'sleep' }, response: { ok: true } },
+          {
+            name: 'get_goal_progress',
+            args: { goalId: 'sleep' },
+            response: { ok: true },
+            asOf: '2026-09-20',
+          },
         ],
       },
       '2026-09-20',

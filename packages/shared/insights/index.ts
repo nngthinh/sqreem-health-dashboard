@@ -7,6 +7,7 @@ import { buildRecommendations, detectSignals } from './signals.js'
 import { computeTrend, splitMovers } from './trends.js'
 
 export * from './coverage.js'
+export * from './digest.js'
 export * from './goals.js'
 export * from './readiness.js'
 export * from './signals.js'
@@ -48,7 +49,7 @@ export function buildInsights(
   const { movers, steady } = splitMovers(trends)
 
   const { resolved, empty } = splitGoals(records, goals, range)
-  const signals = detectSignals(trends, resolved)
+  const signals = detectSignals(trends, resolved, range)
 
   return {
     range,
