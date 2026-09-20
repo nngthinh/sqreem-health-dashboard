@@ -43,8 +43,8 @@ export function createAuthorizationUrl(env: Env, state: string, codeVerifier: st
 }
 
 /**
- * Returns only the ID token: the access and refresh tokens are deliberately dropped
- * (§3.5) — we never call Google again once we know who signed in.
+ * Returns only the ID token: the access and refresh tokens are deliberately dropped —
+ * we never call Google again once we know who signed in.
  */
 export async function exchangeCodeForIdToken(
   env: Env,
@@ -75,7 +75,7 @@ export async function exchangeCodeForIdToken(
 }
 
 /**
- * Decode without signature verification, which OIDC §3.1.3.7 permits precisely here:
+ * Decode without signature verification, which the OpenID Connect Core spec permits here:
  * the token came straight from Google's token endpoint over TLS in answer to our own
  * code and verifier, so there is no untrusted party in between to forge it.
  */
