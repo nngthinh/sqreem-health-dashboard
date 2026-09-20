@@ -28,11 +28,20 @@ export function Home({
   insights: SectionState<Insights>
   records: SectionState<DailyRecord[]>
 }) {
+  // The range filter sits under today's read in every state, so it does not jump
+  // around as the sections resolve.
+  const rangeTabs = (
+    <div className="flex justify-end">
+      <RangeTabs />
+    </div>
+  )
+
   const renderInsights = () => {
     if (insights.isLoading) {
       return (
         <>
           <SkeletonCard lines={3} />
+          {rangeTabs}
           <SkeletonCard lines={2} />
           <SkeletonCard lines={3} />
         </>
@@ -41,23 +50,30 @@ export function Home({
 
     if (insights.isError) {
       return (
-        <ErrorCard
-          title="Couldn't load your insights"
-          message="The dashboard could not reach the server."
-          onRetry={insights.onRetry}
-        />
+        <>
+          <ErrorCard
+            title="Couldn't load your insights"
+            message="The dashboard could not reach the server."
+            onRetry={insights.onRetry}
+          />
+          {rangeTabs}
+        </>
       )
     }
 
     if (!insights.data) {
       return (
-        <EmptyCard title="No insights yet" message="Nothing has been recorded for this range." />
+        <>
+          <EmptyCard title="No insights yet" message="Nothing has been recorded for this range." />
+          {rangeTabs}
+        </>
       )
     }
 
     return (
       <>
         <TodaysRead insights={insights.data} />
+        {rangeTabs}
         <WhatChanged insights={insights.data} />
         <Focus insights={insights.data} />
         <GoalsStrip insights={insights.data} />
@@ -86,10 +102,6 @@ export function Home({
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-8">
-      <div className="flex justify-end">
-        <RangeTabs />
-      </div>
-
       {renderInsights()}
       {renderActivities()}
     </div>
