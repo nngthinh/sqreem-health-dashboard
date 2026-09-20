@@ -59,3 +59,47 @@ export function normaliseBlock(block: InsightBlock, asOf: string): InsightBlock 
   const from = format(subDays(new Date(`${asOf}T00:00:00`), block.range - 1), 'yyyy-MM-dd')
   return { kind: BlockKind.Metric, metricId: block.metricId, period: { from, to } }
 }
+
+/**
+ * Matches the fence only; the body runs to the closing backticks and keeps whatever
+ * whitespace it ends with, because `JSON.parse` already ignores that. The pattern is
+ * deliberately loose about how a model writes a fence — indented inside a list item,
+ * an info string after the tag, an indented closing fence — since tightening it would
+ * not make anything safer (every body still faces `JSON.parse` and the schema) and
+ * would only lose blocks.
+ */
+const INSIGHT_FENCE = /^[ \t]*`{3,}insight\b[^\n]*\n([\s\S]*?)`{3,}/gm
+
+export const MAX_BLOCKS_PER_MESSAGE = 2
+
+/**
+ * Parse then validate, both failing safe: a block that does not parse or does not
+ * validate is dropped and the prose around it still arrives. An unclosed fence —
+ * every mid-stream message — simply matches nothing.
+ */
+export function extractInsightBlocks(markdown: string): {
+  blocks: InsightBlock[]
+  dropped: number
+} {
+  const blocks: InsightBlock[] = []
+  let dropped = 0
+
+  for (const match of markdown.matchAll(INSIGHT_FENCE)) {
+    const body = match[1]
+    if (body === undefined) continue
+
+    let json: unknown
+    try {
+      json = JSON.parse(body)
+    } catch {
+      dropped += 1
+      continue
+    }
+
+    const parsed = InsightBlockSchema.safeParse(json)
+    if (parsed.success) blocks.push(parsed.data)
+    else dropped += 1
+  }
+
+  return { blocks: blocks.slice(0, MAX_BLOCKS_PER_MESSAGE), dropped }
+}

@@ -1,5 +1,11 @@
 import { getDatasetFor } from '@health/shared/data'
-import { BlockKind, GOAL_IDS, METRIC_IDS } from '@health/shared/schema'
+import {
+  BlockKind,
+  type ChatView,
+  GOAL_IDS,
+  MAX_BLOCKS_PER_MESSAGE,
+  METRIC_IDS,
+} from '@health/shared/schema'
 import { describe, expect, it } from 'vitest'
 import { buildSystemPrompt } from '../prompt.js'
 import { TOOL_DEFS } from '../tools/index.js'
@@ -7,7 +13,7 @@ import { TOOL_DEFS } from '../tools/index.js'
 const TODAY = '2026-09-20'
 const { persona, goals } = getDatasetFor('any-user', TODAY)
 
-const prompt = (view?: { route: string; metricId?: string }) =>
+const prompt = (view?: ChatView) =>
   buildSystemPrompt(persona, goals, 'DATA DIGEST (as of 2026-09-20)', view)
 
 describe('output contract', () => {
@@ -20,7 +26,7 @@ describe('output contract', () => {
   it('caps blocks per reply and keeps numbers out of them', () => {
     const text = prompt()
 
-    expect(text).toContain('at most two')
+    expect(text).toContain(`at most ${MAX_BLOCKS_PER_MESSAGE}`)
     expect(text).toContain('Never write a number inside one')
   })
 })
