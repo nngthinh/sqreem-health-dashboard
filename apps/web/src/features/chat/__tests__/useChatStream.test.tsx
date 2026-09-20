@@ -7,9 +7,6 @@ import { chatApi } from '../../../store/api/chatApi'
 import { reducer as chat, StreamStatus } from '../../../store/chatSlice'
 import { useChatStream } from '../useChatStream'
 
-const notify = vi.hoisted(() => ({ success: vi.fn(), error: vi.fn(), info: vi.fn() }))
-vi.mock('../../../lib/notify', () => ({ notify }))
-
 function makeStore() {
   return configureStore({
     reducer: { chat, [chatApi.reducerPath]: chatApi.reducer },
@@ -43,7 +40,6 @@ function renderStream(store: TestStore) {
 
 afterEach(() => {
   vi.unstubAllGlobals()
-  vi.clearAllMocks()
 })
 
 describe('useChatStream', () => {
@@ -99,19 +95,18 @@ describe('useChatStream', () => {
     expect(state.status).toBe(StreamStatus.Error)
     expect(state.streamingMessage).toBe('half an ans')
     expect(state.error).toBe('model unavailable')
-    expect(notify.error).toHaveBeenCalled()
   })
 
-  it('treats a rate limit as a wait rather than a failure to report', async () => {
+  it('reports a rate limit as something to wait out', async () => {
     const store = makeStore()
     stubStream([], 429)
 
     const { result } = renderStream(store)
     await result.current.send('c1', 'again')
 
-    expect(store.getState().chat.status).toBe(StreamStatus.Error)
-    expect(notify.info).toHaveBeenCalled()
-    expect(notify.error).not.toHaveBeenCalled()
+    const state = store.getState().chat
+    expect(state.status).toBe(StreamStatus.Error)
+    expect(state.error).toBe('One moment, catching up.')
   })
 
   it('ignores keep-alive noise that carries no event', async () => {
@@ -141,7 +136,8 @@ describe('useChatStream', () => {
     result.current.abort()
     await pending
 
-    expect(store.getState().chat.status).toBe(StreamStatus.Streaming)
-    expect(notify.error).not.toHaveBeenCalled()
+    const state = store.getState().chat
+    expect(state.status).toBe(StreamStatus.Streaming)
+    expect(state.error).toBeNull()
   })
 })

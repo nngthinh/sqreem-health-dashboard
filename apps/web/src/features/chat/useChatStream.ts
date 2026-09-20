@@ -1,6 +1,5 @@
 import type { ChatView } from '@health/shared/schema'
 import { useCallback, useRef } from 'react'
-import { notify } from '../../lib/notify'
 import { useAppDispatch } from '../../store'
 import { chatApi } from '../../store/api/chatApi'
 import {
@@ -12,10 +11,18 @@ import {
   ToolActivityStatus,
 } from '../../store/chatSlice'
 
+/*
+ * Every failure here ends in `streamFailed`, which the surface renders inline beside
+ * the turn that failed, with a retry. A toast on top of that says the same thing twice
+ * — in two different wordings — so the inline alert is the only failure surface.
+ */
+
 /** Abort once the server has gone quiet this long — a live stream keeps resetting it. */
 const IDLE_TIMEOUT_MS = 30_000
 
 const STALLED = 'The assistant stopped mid-answer.'
+
+const CONNECTION_LOST = 'Lost the connection to the assistant.'
 
 type SseFrame = { event: string; data: unknown }
 
@@ -103,7 +110,6 @@ export function useChatStream() {
           dispatch(streamDone())
         } else if (event === 'error') {
           dispatch(streamFailed(payload.message ?? STALLED))
-          notify.error(STALLED)
         }
       }
 
@@ -119,7 +125,6 @@ export function useChatStream() {
         })
 
         if (response.status === 429) {
-          notify.info('One moment, catching up.')
           dispatch(streamFailed('One moment, catching up.'))
           return
         }
@@ -145,17 +150,15 @@ export function useChatStream() {
             if (parsed) handleFrame(parsed)
           }
         }
-      } catch (error) {
+      } catch {
         if (hasTimedOut) {
           dispatch(streamFailed(STALLED))
-          notify.error(STALLED)
           return
         }
 
         if (controller.signal.aborted) return
 
-        dispatch(streamFailed(error instanceof Error ? error.message : 'Connection lost'))
-        notify.error('Lost the connection to the assistant.')
+        dispatch(streamFailed(CONNECTION_LOST))
       } finally {
         clearTimeout(idleTimer)
         controllerRef.current = null
