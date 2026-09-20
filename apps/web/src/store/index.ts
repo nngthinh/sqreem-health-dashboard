@@ -1,11 +1,16 @@
 import { configureStore } from '@reduxjs/toolkit'
 import { useDispatch, useSelector } from 'react-redux'
 import { authApi } from './api/authApi'
+import { dataApi } from './api/dataApi'
 import { persistUi, reducer as ui } from './uiSlice'
 
 export const store = configureStore({
-  reducer: { ui, [authApi.reducerPath]: authApi.reducer },
-  middleware: (getDefault) => getDefault().concat(authApi.middleware),
+  reducer: {
+    ui,
+    [authApi.reducerPath]: authApi.reducer,
+    [dataApi.reducerPath]: dataApi.reducer,
+  },
+  middleware: (getDefault) => getDefault().concat(authApi.middleware, dataApi.middleware),
 })
 
 store.subscribe(() => persistUi(store.getState().ui))
