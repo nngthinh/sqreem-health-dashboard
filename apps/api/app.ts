@@ -4,6 +4,7 @@ import { logger } from 'hono/logger'
 import { authGuard } from './auth/guard.js'
 import { authRoutes } from './auth/routes.js'
 import type { Env } from './env.js'
+import { chatRoutes } from './routes/chat.js'
 import { conversationRoutes } from './routes/conversations.js'
 import { dataRoutes } from './routes/data.js'
 
@@ -24,6 +25,7 @@ export function createApp(env: Env): Hono<AppBindings> {
   app.route('/', authRoutes(env))
   app.route('/', dataRoutes())
   app.route('/', conversationRoutes())
+  app.route('/', chatRoutes(env))
 
   app.get('/api/health', (c) =>
     c.json({ ok: true, authMode: env.authMode, devBypass: env.devBypass }),

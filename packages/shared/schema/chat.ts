@@ -3,10 +3,18 @@ import type { InsightBlock } from './blocks.js'
 import { MetricIdSchema } from './ids.js'
 
 /** The client posts only this. Prior turns are read from the database, never accepted. */
+export const ChatViewSchema = z.object({
+  route: z.string().max(80),
+  metricId: MetricIdSchema.optional(),
+})
+
+/** What the user is looking at as they ask, so "this" in a question has a referent. */
+export type ChatView = z.infer<typeof ChatViewSchema>
+
 export const ChatRequestSchema = z.object({
   conversationId: z.string().uuid(),
   message: z.string().min(1).max(2000),
-  view: z.object({ route: z.string().max(80), metricId: MetricIdSchema.optional() }).optional(),
+  view: ChatViewSchema.optional(),
 })
 export type ChatRequest = z.infer<typeof ChatRequestSchema>
 

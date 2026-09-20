@@ -59,3 +59,39 @@ export function normaliseBlock(block: InsightBlock, asOf: string): InsightBlock 
   const from = format(subDays(new Date(`${asOf}T00:00:00`), block.range - 1), 'yyyy-MM-dd')
   return { kind: BlockKind.Metric, metricId: block.metricId, period: { from, to } }
 }
+
+const INSIGHT_FENCE = /```insight\s*\n([\s\S]*?)\n```/g
+
+export const MAX_BLOCKS_PER_MESSAGE = 2
+
+/**
+ * Parse then validate, both failing safe: a block that does not parse or does not
+ * validate is dropped and the prose around it still arrives. An unclosed fence —
+ * every mid-stream message — simply matches nothing.
+ */
+export function extractInsightBlocks(markdown: string): {
+  blocks: InsightBlock[]
+  dropped: number
+} {
+  const blocks: InsightBlock[] = []
+  let dropped = 0
+
+  for (const match of markdown.matchAll(INSIGHT_FENCE)) {
+    const body = match[1]
+    if (body === undefined) continue
+
+    let json: unknown
+    try {
+      json = JSON.parse(body)
+    } catch {
+      dropped += 1
+      continue
+    }
+
+    const parsed = InsightBlockSchema.safeParse(json)
+    if (parsed.success) blocks.push(parsed.data)
+    else dropped += 1
+  }
+
+  return { blocks: blocks.slice(0, MAX_BLOCKS_PER_MESSAGE), dropped }
+}
