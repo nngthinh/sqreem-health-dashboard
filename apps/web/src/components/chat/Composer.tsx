@@ -21,7 +21,7 @@ export function Composer({ disabled, initialValue = '', onSend }: ComposerProps)
 
   return (
     <div className="border-t border-line">
-      <form className="mx-auto flex w-full max-w-3xl gap-2 px-4 py-4" onSubmit={handleSubmit}>
+      <form className="mx-auto flex w-full max-w-2xl gap-2 px-4 pb-5 pt-4" onSubmit={handleSubmit}>
         <label className="sr-only" htmlFor="chat-composer">
           Ask about your data
         </label>
@@ -36,7 +36,7 @@ export function Composer({ disabled, initialValue = '', onSend }: ComposerProps)
         <button
           type="submit"
           disabled={disabled || draft.trim().length === 0}
-          className="rounded-md bg-ink px-4 py-2 text-sm text-surface transition-opacity disabled:opacity-40"
+          className="rounded-md bg-ink px-4 py-2 text-sm text-surface transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
         >
           Send
         </button>

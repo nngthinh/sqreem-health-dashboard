@@ -80,7 +80,7 @@ describe('useChatStream', () => {
 
     expect(store.getState().chat.toolActivity).toEqual(['get_metric_series'])
 
-    await waitFor(() => expect(store.getState().chat.toolActivity).toEqual([]))
+    await waitFor(() => expect(store.getState().chat.toolActivity).toEqual([]), { timeout: 3_000 })
   })
 
   it('drops a held chip when the turn is abandoned', async () => {

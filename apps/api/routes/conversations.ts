@@ -11,7 +11,7 @@ import {
 } from '../db/conversations.js'
 
 const CreateSchema = z.object({ firstMessage: z.string().max(2000).optional() })
-const RenameSchema = z.object({ title: z.string().min(1).max(120) })
+const RenameSchema = z.object({ title: z.string().trim().min(1).max(255) })
 
 const notFound = { error: 'not_found' } as const
 

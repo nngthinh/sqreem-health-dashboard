@@ -9,6 +9,7 @@
   --color-good: oklch(0.78 0.14 155);
   --color-steady: oklch(0.76 0.09 240);
   --color-watch: oklch(0.8 0.15 65);
+  --color-danger: oklch(0.62 0.2 25);
 
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --radius-card: 14px;

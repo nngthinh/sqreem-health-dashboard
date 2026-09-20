@@ -21,6 +21,7 @@ type ChatState = {
   activeConversationId: string | null
   /** The question of the turn in flight: the server has not stored it yet. */
   pendingMessage: string
+  turn: number
   streamingMessage: string
   status: StreamStatus
   toolActivity: string[]
@@ -30,6 +31,7 @@ type ChatState = {
 const initialState: ChatState = {
   activeConversationId: null,
   pendingMessage: '',
+  turn: 0,
   streamingMessage: '',
   status: StreamStatus.Idle,
   toolActivity: [],
@@ -55,6 +57,7 @@ const chatSlice = createSlice({
     startStream(state, action: PayloadAction<{ conversationId: string; message: string }>) {
       state.activeConversationId = action.payload.conversationId
       state.pendingMessage = action.payload.message
+      state.turn += 1
       state.streamingMessage = ''
       state.status = StreamStatus.Streaming
       state.toolActivity = []
@@ -68,10 +71,16 @@ const chatSlice = createSlice({
     setToolActivity(state, action: PayloadAction<ToolActivity>) {
       const { name, status } = action.payload
 
-      state.toolActivity =
-        status === ToolActivityStatus.Running
-          ? [...state.toolActivity, name]
-          : state.toolActivity.filter((running) => running !== name)
+      if (status !== ToolActivityStatus.Running) {
+        state.toolActivity = state.toolActivity.filter((running) => running !== name)
+        return
+      }
+
+      // A model may ask for the same tool twice in one turn. One chip says the same
+      // thing as two, and two would share a key and be removed by the first `done`.
+      if (state.toolActivity.includes(name)) return
+
+      state.toolActivity.push(name)
     },
 
     streamFailed(state, action: PayloadAction<string>) {

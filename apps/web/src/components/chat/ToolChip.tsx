@@ -13,7 +13,7 @@ export function ToolChip({ name, index }: { name: string; index: number }) {
   return (
     <span
       style={{ animationDelay: `${index * STAGGER_MS}ms` }}
-      className="inline-flex animate-message-in items-center gap-2 self-start rounded-full border border-line px-3 py-1.5 text-xs text-ink-muted"
+      className="inline-flex animate-message-in items-center gap-1.5 rounded-full border border-line px-2.5 py-1 text-[11px] text-ink-muted"
     >
       <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-steady" aria-hidden="true" />
       {TOOL_LABELS[name] ?? 'Checking your data…'}

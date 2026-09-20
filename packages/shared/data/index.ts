@@ -4,7 +4,7 @@ import { generateDataset } from './generator'
 import { DANIEL, GOALS } from './persona'
 
 export { generateDataset } from './generator'
-export { DANIEL, GOALS } from './persona'
+export { DANIEL, GOALS, personaFor } from './persona'
 export { gaussian, mulberry32 } from './rng'
 
 const SEED = 20260921

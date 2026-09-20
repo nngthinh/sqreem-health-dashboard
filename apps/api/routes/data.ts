@@ -1,9 +1,10 @@
-import { getDatasetFor } from '@health/shared/data'
+import { getDatasetFor, personaFor } from '@health/shared/data'
 import { buildInsights } from '@health/shared/insights'
 import { IsoDateSchema, RangeSchema } from '@health/shared/schema'
 import { Hono } from 'hono'
 import { z } from 'zod'
 import type { AppBindings } from '../app.js'
+import { getUserById } from '../db/users.js'
 
 const DEFAULT_RANGE = 30
 
@@ -20,10 +21,13 @@ const RecordsQuerySchema = z.object({
 export function dataRoutes() {
   const app = new Hono<AppBindings>()
 
-  app.get('/api/profile', (c) => {
-    const { persona, goals } = getDatasetFor(c.get('userId'))
+  app.get('/api/profile', async (c) => {
+    const userId = c.get('userId')
+    const { goals } = getDatasetFor(userId)
 
-    return c.json({ persona, goals })
+    const user = await getUserById(userId)
+
+    return c.json({ persona: personaFor(user ?? {}), goals })
   })
 
   app.get('/api/records', (c) => {

@@ -1,6 +1,6 @@
-import { type ChatView, MessageRole, MetricIdSchema } from '@health/shared/schema'
+import { type ChatMessage, type ChatView, MessageRole, MetricIdSchema } from '@health/shared/schema'
 import { ChevronDown } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router'
 import useLocalStorage from 'react-use/lib/useLocalStorage'
 import { useChatStream } from '../../features/chat/useChatStream'
@@ -20,6 +20,9 @@ const METRIC_ROUTE = /^\/metric\/([a-z]+)$/
 /** Which chat was open last, so returning to the tab returns to the conversation. */
 const LAST_CONVERSATION_KEY = 'chat:last-conversation'
 
+/** Breathing room kept below a pinned question, so the answer never starts flush. */
+const ANSWER_GUTTER_PX = 24
+
 /** What the user was looking at when they asked, so "this" in a question has a referent. */
 function parseView(from: string | null): ChatView | undefined {
   if (!from) return undefined
@@ -29,12 +32,21 @@ function parseView(from: string | null): ChatView | undefined {
   return metricId.success ? { route: from, metricId: metricId.data } : { route: from }
 }
 
+/** The newest question in the transcript: the turn the view is anchored to. */
+function findLastAsk(messages: ChatMessage[]): number {
+  for (let index = messages.length - 1; index >= 0; index--) {
+    if (messages[index]?.role === MessageRole.User) return index
+  }
+
+  return -1
+}
+
 export function ChatSurface({ conversationId }: { conversationId: string | null }) {
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
   const [params] = useSearchParams()
 
-  const { pendingMessage, streamingMessage, status, toolActivity, error } = useAppSelector(
+  const { pendingMessage, streamingMessage, status, toolActivity, turn, error } = useAppSelector(
     (state) => state.chat,
   )
   const { send, abort } = useChatStream()
@@ -45,31 +57,66 @@ export function ChatSurface({ conversationId }: { conversationId: string | null 
   // On a phone the list would eat the whole screen, so it collapses behind a header.
   const [isListOpen, setIsListOpen] = useState(false)
 
+  // Room reserved under the newest question so it can sit at the top of the viewport.
+  const [answerMinHeight, setAnswerMinHeight] = useState(0)
+
+  // A new conversation is created before the stream starts, and the composer must be
+  // shut for that gap too: the status alone would leave Send live across it.
+  const [isSending, setIsSending] = useState(false)
+
+  // Which turn is in flight, and how long the transcript was when it was asked.
+  const [askedAt, setAskedAt] = useState<{ turn: number; messageCount: number } | null>(null)
+
   const [lastConversationId, setLastConversationId, forgetLastConversation] =
     useLocalStorage<string>(LAST_CONVERSATION_KEY)
 
   const scrollRef = useRef<HTMLDivElement>(null)
+  const askRef = useRef<HTMLDivElement>(null)
+  // The turn this conversation is pinned to; null means the feed follows the bottom.
+  const pinnedTurn = useRef<number | null>(null)
   // Reopening is a landing behaviour, not a rule: after that, /chats means a new chat.
   const hasReopened = useRef(false)
 
   const prefill = params.get('q') ?? ''
   const view = parseView(params.get('from'))
-  const messages = thread.data?.messages ?? []
+
+  // `currentData` is empty while another conversation loads, where `data` would still
+  // hold the previous transcript — which is the old chat flashing under the new one.
+  const messages = thread.currentData?.messages ?? []
+  const messageCount = messages.length
+
+  // Measured as the turn opens rather than in an effect: an effect would run a frame
+  // late, and the question would blink out of the feed for exactly that frame. React
+  // re-renders from here without painting, so the reads below see the new measurement.
+  if (status === StreamStatus.Streaming && askedAt?.turn !== turn) {
+    setAskedAt({ turn, messageCount })
+  }
 
   // The server stores the question as it answers it, so until the refetched transcript
   // carries it the asker would watch their own words vanish. Shown from here until then.
-  const isPendingStored = messages.some(
-    (message) => message.role === MessageRole.User && message.content === pendingMessage,
-  )
-  const isAnswering = status === StreamStatus.Streaming && streamingMessage.length === 0
+  // Length, not text: the same question asked twice is two turns, and matching on the
+  // words would read the second as already stored and never draw its bubble.
+  const isPendingStored = askedAt !== null && messageCount > askedAt.messageCount
 
-  // One number that grows with everything in the feed, so the scroll effect has a
-  // single dependency it actually reads.
-  const feedLength =
-    messages.length + toolActivity.length + streamingMessage.length + pendingMessage.length
+  const isAnswering = status === StreamStatus.Streaming && streamingMessage.length === 0
+  const isThreadLoading = Boolean(conversationId) && thread.isFetching && !thread.currentData
+
+  // A live question is not in the transcript yet, so it is its own anchor; otherwise the
+  // newest stored question is, and everything after it is the answer it opened room for.
+  const hasLiveAsk = pendingMessage.length > 0 && !isPendingStored
+  const anchorIndex = hasLiveAsk ? messages.length : findLastAsk(messages)
+  const storedAsk = hasLiveAsk ? undefined : messages[anchorIndex]
+
+  const beforeAsk = anchorIndex === -1 ? messages : messages.slice(0, anchorIndex)
+  const afterAsk = anchorIndex === -1 ? [] : messages.slice(anchorIndex + 1)
 
   useEffect(() => {
     dispatch(setActiveConversation(conversationId))
+
+    // Another conversation is another feed: it opens at its own end, not at this pin.
+    pinnedTurn.current = null
+    setAnswerMinHeight(0)
+    setAskedAt(null)
   }, [conversationId, dispatch])
 
   useEffect(() => {
@@ -94,23 +141,54 @@ export function ChatSurface({ conversationId }: { conversationId: string | null 
   // A stream that outlives the panel would keep writing into a buffer nobody reads.
   useEffect(() => abort, [abort])
 
+  // An unpinned feed sits at its newest turn: opening a conversation lands at the end.
   useEffect(() => {
     const container = scrollRef.current
-    if (!container || feedLength === 0) return
+    if (!container || messageCount === 0 || pinnedTurn.current !== null) return
 
     container.scrollTop = container.scrollHeight
-  }, [feedLength])
+  }, [messageCount])
+
+  // A new question rises to the top of the viewport and stays there while it is answered,
+  // so the answer is read from its first line rather than chased from the bottom edge.
+  useLayoutEffect(() => {
+    if (status !== StreamStatus.Streaming || pinnedTurn.current === turn) return
+
+    // A turn opened from a skeleton has nothing to scroll to yet; the pin waits for the
+    // anchor to reach the DOM, which is the next render either way.
+    if (isThreadLoading || anchorIndex < 0) return
+
+    const container = scrollRef.current
+    const ask = askRef.current
+    if (!container || !ask) return
+
+    pinnedTurn.current = turn
+    setAnswerMinHeight(Math.max(0, container.clientHeight - ask.offsetHeight - ANSWER_GUTTER_PX))
+
+    // The reserved room lands in the DOM with this render; the scroll needs it first.
+    const frame = requestAnimationFrame(() => {
+      askRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    })
+
+    return () => cancelAnimationFrame(frame)
+  }, [status, turn, isThreadLoading, anchorIndex])
 
   const handleSubmit = async (message: string) => {
-    let id = conversationId
+    setIsSending(true)
 
-    if (!id) {
-      const created = await createConversation({ firstMessage: message }).unwrap()
-      id = created.id
-      await navigate(`/chats/${id}`, { replace: true })
+    try {
+      let id = conversationId
+
+      if (!id) {
+        const created = await createConversation({ firstMessage: message }).unwrap()
+        id = created.id
+        await navigate(`/chats/${id}`, { replace: true })
+      }
+
+      await send(id, message, view)
+    } finally {
+      setIsSending(false)
     }
-
-    await send(id, message, view)
   }
 
   const handleSelect = (id: string) => {
@@ -140,8 +218,19 @@ export function ChatSurface({ conversationId }: { conversationId: string | null 
     onDeleted: handleDeleted,
   }
 
+  const renderMessage = (message: ChatMessage) => (
+    <MessageBubble
+      key={message.id}
+      role={message.role}
+      content={message.content}
+      blocks={message.blocks}
+    />
+  )
+
   const renderThread = () => {
-    if (thread.isLoading) return <SkeletonCard lines={3} />
+    // A question already on screen outranks the placeholder: the asker sees their own
+    // words, not a skeleton, while the transcript behind them loads.
+    if (isThreadLoading && !hasLiveAsk) return <SkeletonCard lines={3} />
 
     if (thread.isError) {
       return (
@@ -153,14 +242,49 @@ export function ChatSurface({ conversationId }: { conversationId: string | null 
       )
     }
 
-    return messages.map((message) => (
-      <MessageBubble
-        key={message.id}
-        role={message.role}
-        content={message.content}
-        blocks={message.blocks}
-      />
-    ))
+    return (
+      <>
+        {beforeAsk.map(renderMessage)}
+
+        {/* The anchor: the newest question, and the only element the feed scrolls to. */}
+        <div ref={askRef} className="flex scroll-mt-2 flex-col gap-5">
+          {hasLiveAsk && <MessageBubble role={MessageRole.User} content={pendingMessage} />}
+          {!hasLiveAsk && storedAsk && renderMessage(storedAsk)}
+        </div>
+
+        <div
+          style={answerMinHeight > 0 ? { minHeight: answerMinHeight } : undefined}
+          className="flex flex-col gap-5"
+        >
+          {afterAsk.map(renderMessage)}
+
+          {streamingMessage.length > 0 && (
+            <MessageBubble role={MessageRole.Assistant} content={streamingMessage} />
+          )}
+
+          {(isAnswering || toolActivity.length > 0) && (
+            // One waiting row: the dots hold the left, and the chips run to their right
+            // as tools come and go, rather than swapping in and out of the feed.
+            <div className="flex flex-wrap items-center gap-2">
+              {isAnswering && <ThinkingDots />}
+
+              {toolActivity.map((name, index) => (
+                <ToolChip key={name} name={name} index={index} />
+              ))}
+            </div>
+          )}
+
+          {status === StreamStatus.Error && (
+            <div role="alert" className="animate-message-in text-sm text-watch">
+              {error ?? 'The assistant stopped mid-answer.'}{' '}
+              <button type="button" className="underline" onClick={handleRetry}>
+                Retry
+              </button>
+            </div>
+          )}
+        </div>
+      </>
+    )
   }
 
   return (
@@ -193,47 +317,21 @@ export function ChatSurface({ conversationId }: { conversationId: string | null 
         </div>
 
         <div ref={scrollRef} className="flex min-h-0 flex-1 flex-col overflow-y-auto">
-          {/* One column, the same width as the composer, so nothing shifts as it fills. */}
-          <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-5 px-4 py-6">
-            {!conversationId && <ChatStarter onPick={(message) => void handleSubmit(message)} />}
+          {/* One column, the same width as the composer, so nothing shifts as it fills.
+              Narrower than the page: a chat reads as a column, not as a full-width page. */}
+          <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-5 px-4 pb-12 pt-6">
+            {!conversationId && (
+              <ChatStarter disabled={isSending} onPick={(message) => void handleSubmit(message)} />
+            )}
 
             {conversationId && renderThread()}
-
-            {pendingMessage.length > 0 && !isPendingStored && (
-              <MessageBubble role={MessageRole.User} content={pendingMessage} />
-            )}
-
-            {streamingMessage.length > 0 && (
-              <MessageBubble role={MessageRole.Assistant} content={streamingMessage} />
-            )}
-
-            {(isAnswering || toolActivity.length > 0) && (
-              // One waiting block: chips are a running list above the dots, and the dots
-              // stay put as tools come and go rather than swapping in and out of the feed.
-              <div className="flex flex-col items-start gap-2">
-                {toolActivity.map((name, index) => (
-                  <ToolChip key={name} name={name} index={index} />
-                ))}
-
-                {isAnswering && <ThinkingDots />}
-              </div>
-            )}
-
-            {status === StreamStatus.Error && (
-              <div role="alert" className="animate-message-in text-sm text-watch">
-                {error ?? 'The assistant stopped mid-answer.'}{' '}
-                <button type="button" className="underline" onClick={handleRetry}>
-                  Retry
-                </button>
-              </div>
-            )}
           </div>
         </div>
 
         {/* Remounted when the seeded question changes, so a new ask replaces the draft. */}
         <Composer
           key={prefill}
-          disabled={status === StreamStatus.Streaming}
+          disabled={isSending || status === StreamStatus.Streaming}
           initialValue={prefill}
           onSend={(message) => void handleSubmit(message)}
         />
@@ -250,7 +348,13 @@ const SUGGESTIONS = [
 ]
 
 /** An empty thread is mostly empty space, so the invitation sits in the middle of it. */
-function ChatStarter({ onPick }: { onPick: (message: string) => void }) {
+function ChatStarter({
+  disabled,
+  onPick,
+}: {
+  disabled: boolean
+  onPick: (message: string) => void
+}) {
   return (
     <div className="m-auto max-w-xl space-y-4 text-center">
       <p className="text-sm text-ink-muted">Ask about your own data.</p>
@@ -260,8 +364,9 @@ function ChatStarter({ onPick }: { onPick: (message: string) => void }) {
           <button
             key={suggestion}
             type="button"
+            disabled={disabled}
             onClick={() => onPick(suggestion)}
-            className="rounded-full border border-line px-3 py-1.5 text-xs text-ink-muted hover:border-ink-muted"
+            className="rounded-full border border-line px-3 py-1.5 text-xs text-ink-muted transition-opacity hover:border-ink-muted disabled:cursor-not-allowed disabled:opacity-40"
           >
             {suggestion}
           </button>

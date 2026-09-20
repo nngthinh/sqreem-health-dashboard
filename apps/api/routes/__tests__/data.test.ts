@@ -10,7 +10,9 @@ describe('GET /api/profile', () => {
   it('returns the persona and exactly three per-day goals', async () => {
     const body = await (await app.request('/api/profile')).json()
 
-    expect(body.persona.name).toBe('Daniel Tan')
+    // The fixture supplies the data; the signed-in account supplies the name on it.
+    expect(body.persona.name).toBe('Dev User')
+    expect(body.persona.occupation).toBe('Senior Product Manager')
     expect(body.goals).toHaveLength(3)
     expect(body.goals.every((g: { cadence: string }) => g.cadence === 'day')).toBe(true)
   })

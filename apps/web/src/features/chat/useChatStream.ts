@@ -23,7 +23,7 @@ const IDLE_TIMEOUT_MS = 30_000
 const STALLED = 'The assistant stopped mid-answer.'
 
 /** A tool that answers instantly would flash its chip; it stays up long enough to read. */
-const MIN_TOOL_VISIBLE_MS = 500
+const MIN_TOOL_VISIBLE_MS = 1_000
 
 const CONNECTION_LOST = 'Lost the connection to the assistant.'
 

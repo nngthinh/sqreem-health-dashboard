@@ -38,3 +38,9 @@ export async function getOrCreateFixedUser(
   if (existing[0]) return existing[0]
   return upsertGoogleUser({ googleSub, email, name, picture: null })
 }
+
+export async function getUserById(id: string): Promise<User | undefined> {
+  const rows = await db.select().from(users).where(eq(users.id, id)).limit(1)
+
+  return rows[0]
+}

@@ -1,4 +1,4 @@
-import { getDatasetFor } from '@health/shared/data'
+import { getDatasetFor, personaFor } from '@health/shared/data'
 import { buildDigest } from '@health/shared/insights'
 import {
   type ChatMessage,
@@ -12,6 +12,7 @@ import { Hono } from 'hono'
 import { type SSEStreamingApi, streamSSE } from 'hono/streaming'
 import type { AppBindings } from '../app.js'
 import { appendMessage, getConversation } from '../db/conversations.js'
+import { getUserById } from '../db/users.js'
 import type { Env } from '../env.js'
 import { createProvider } from '../llm/gemini/provider.js'
 import { LoopEventType, runToolLoop, type TokenUsage } from '../llm/loop.js'
@@ -69,7 +70,8 @@ export function chatRoutes(env: Env) {
     const thread = await getConversation(userId, conversationId)
     if (!thread) return c.json({ error: 'not_found' }, 404)
 
-    const { persona, goals, records } = getDatasetFor(userId)
+    const { goals, records } = getDatasetFor(userId)
+    const persona = personaFor((await getUserById(userId)) ?? {})
     const asOf = records.at(-1)?.date ?? format(new Date(), 'yyyy-MM-dd')
     const system = buildSystemPrompt(persona, goals, buildDigest(records, goals, asOf), view)
 

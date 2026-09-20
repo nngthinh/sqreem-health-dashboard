@@ -1,5 +1,4 @@
 import { NavLink } from 'react-router'
-import { notify } from '../../lib/notify'
 import { type Me, useLogoutMutation } from '../../store/api/authApi'
 
 const items = [
@@ -7,8 +6,20 @@ const items = [
   { to: '/chats', label: 'Chats', icon: '✦' },
 ]
 
-export function Sidebar({ me, collapsed }: { me: Me | undefined; collapsed: boolean }) {
+type SidebarProps = {
+  me: Me | undefined
+  collapsed: boolean
+  /** Set by the mobile drawer: following a link there should close the drawer behind it. */
+  onNavigate?: () => void
+}
+
+export function Sidebar({ me, collapsed, onNavigate }: SidebarProps) {
   const [logout] = useLogoutMutation()
+
+  const handleSignOut = async () => {
+    onNavigate?.()
+    await logout()
+  }
 
   return (
     <nav
@@ -26,6 +37,7 @@ export function Sidebar({ me, collapsed }: { me: Me | undefined; collapsed: bool
             <NavLink
               to={item.to}
               end={item.to === '/'}
+              onClick={onNavigate}
               className={({ isActive }) =>
                 `mb-1 flex items-center gap-3 rounded-md px-3 py-2 text-sm ${
                   isActive ? 'bg-line/60 text-ink' : 'text-ink-muted hover:bg-line/30'
@@ -45,18 +57,26 @@ export function Sidebar({ me, collapsed }: { me: Me | undefined; collapsed: bool
         </p>
       )}
 
-      <div className="flex items-center gap-2 border-t border-line px-3 py-3">
-        <span className="grid h-7 w-7 place-items-center rounded-full bg-line text-xs">
-          {me?.name?.[0] ?? '?'}
-        </span>
+      {/* Whose data this is, named from the signed-in account rather than the fixture. */}
+      <div className="border-t border-line px-3 py-3">
+        <div className="flex items-center gap-2">
+          <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-line text-xs">
+            {me?.name?.[0]?.toUpperCase() ?? '?'}
+          </span>
+
+          {!collapsed && (
+            <div className="min-w-0">
+              <p className="truncate text-sm">{me?.name ?? 'Signed in'}</p>
+              {me?.email && <p className="truncate text-xs text-ink-muted">{me.email}</p>}
+            </div>
+          )}
+        </div>
+
         {!collapsed && (
           <button
             type="button"
-            className="text-sm text-ink-muted hover:text-ink"
-            onClick={async () => {
-              await logout()
-              notify.info('Signed out')
-            }}
+            className="mt-2 w-full rounded-md border border-line px-2 py-1.5 text-xs text-ink-muted hover:bg-line/40 hover:text-ink"
+            onClick={() => void handleSignOut()}
           >
             Sign out
           </button>

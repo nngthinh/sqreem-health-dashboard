@@ -4,9 +4,18 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./schema": { "types": "./schema/index.ts", "default": "./dist/schema.js" },
-    "./data": { "types": "./data/index.ts", "default": "./dist/data.js" },
-    "./insights": { "types": "./insights/index.ts", "default": "./dist/insights.js" }
+    "./schema": {
+      "types": "./schema/index.ts",
+      "default": "./dist/schema.js"
+    },
+    "./data": {
+      "types": "./data/index.ts",
+      "default": "./dist/data.js"
+    },
+    "./insights": {
+      "types": "./insights/index.ts",
+      "default": "./dist/insights.js"
+    }
   },
   "//build": "The Vercel API function resolves @health/shared through the node_modules workspace symlink and never transpiles it, so the default export condition points at pre-built JS. The types condition still points at the .ts source so tsc's bundler resolution keeps full type fidelity.",
   "scripts": {

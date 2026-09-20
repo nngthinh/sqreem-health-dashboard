@@ -1,6 +1,7 @@
 import type { Insights } from '@health/shared/schema'
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
+import { EmptyCard } from '../states/EmptyCard'
 
 export function FocusThisWeek({ insights }: { insights: Insights }) {
   const navigate = useNavigate()
@@ -18,7 +19,10 @@ export function FocusThisWeek({ insights }: { insights: Insights }) {
   const renderRecommendations = () => {
     if (insights.recommendations.length === 0) {
       return (
-        <p className="text-sm text-ink-muted">Nothing needs attention this week — keep going.</p>
+        <EmptyCard
+          title="Nothing needs attention"
+          message="No recommendation stands out this week — keep going."
+        />
       )
     }
 

@@ -39,7 +39,7 @@ export function App() {
       </div>
 
       <MobileDrawer open={drawerOpen} onOpenChange={(o) => dispatch(setDrawerOpen(o))}>
-        <Sidebar me={me} collapsed={false} />
+        <Sidebar me={me} collapsed={false} onNavigate={() => dispatch(setDrawerOpen(false))} />
       </MobileDrawer>
 
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">

@@ -19,7 +19,7 @@ export function MessageBubble({ role, content, blocks }: MessageBubbleProps) {
     return (
       // A block would fill the column whatever it holds, so the bubble is sized to its
       // own text and pushed right; long asks still stop at most of the width.
-      <div className="ml-auto w-fit max-w-[85%] animate-message-in whitespace-pre-wrap rounded-card bg-line px-4 py-2.5 text-sm">
+      <div className="ml-auto w-fit max-w-[85%] animate-message-in whitespace-pre-wrap rounded-2xl bg-line px-3 py-1.5 text-[13px] leading-relaxed">
         {content}
       </div>
     )
@@ -32,7 +32,7 @@ export function MessageBubble({ role, content, blocks }: MessageBubbleProps) {
   const rendered = blocks ?? extractInsightBlocks(content).blocks
 
   return (
-    <div className="max-w-[95%] animate-message-in space-y-3 text-sm">
+    <div className="max-w-[85%] animate-message-in space-y-2.5 text-[13px] leading-relaxed">
       {prose.length > 0 && <Markdown prose={prose} />}
 
       {rendered.map((block, index) => (

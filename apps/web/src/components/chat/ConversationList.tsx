@@ -1,10 +1,14 @@
-import { Pencil, Trash2 } from 'lucide-react'
+import type { ConversationSummary } from '@health/shared/schema'
+import { useState } from 'react'
 import { notify } from '../../lib/notify'
 import {
   useDeleteConversationMutation,
   useListConversationsQuery,
   useRenameConversationMutation,
 } from '../../store/api/chatApi'
+import { ConfirmDialog } from '../common/ConfirmDialog'
+import { ConversationMenu } from './ConversationMenu'
+import { RenameConversationDialog } from './RenameConversationDialog'
 
 type ConversationListProps = {
   activeId: string | null
@@ -13,23 +17,35 @@ type ConversationListProps = {
   onDeleted: (id: string) => void
 }
 
+type PendingAction = { kind: 'rename' | 'delete'; conversation: ConversationSummary }
+
 export function ConversationList({ activeId, onSelect, onNew, onDeleted }: ConversationListProps) {
   const { data: conversations = [], isError, refetch } = useListConversationsQuery()
 
-  const [renameConversation] = useRenameConversationMutation()
-  const [deleteConversation] = useDeleteConversationMutation()
+  const [renameConversation, renameState] = useRenameConversationMutation()
+  const [deleteConversation, deleteState] = useDeleteConversationMutation()
 
-  const handleRename = async (id: string, currentTitle: string) => {
-    const title = window.prompt('Rename conversation', currentTitle)?.trim()
-    if (!title) return
+  const [action, setAction] = useState<PendingAction | null>(null)
 
-    const result = await renameConversation({ id, title })
-    if ('error' in result) notify.error("Couldn't rename that conversation.")
+  const closeAction = () => setAction(null)
+
+  const handleRename = async (title: string) => {
+    if (!action) return
+
+    const result = await renameConversation({ id: action.conversation.id, title })
+
+    if ('error' in result) {
+      notify.error("Couldn't rename that conversation.")
+      return
+    }
+
+    closeAction()
   }
 
-  const handleDelete = async (id: string, title: string) => {
-    if (!window.confirm(`Delete "${title}"? This cannot be undone.`)) return
+  const handleDelete = async () => {
+    if (!action) return
 
+    const { id } = action.conversation
     const result = await deleteConversation(id)
 
     if ('error' in result) {
@@ -37,6 +53,7 @@ export function ConversationList({ activeId, onSelect, onNew, onDeleted }: Conve
       return
     }
 
+    closeAction()
     notify.success('Conversation deleted')
     onDeleted(id)
   }
@@ -77,23 +94,11 @@ export function ConversationList({ activeId, onSelect, onNew, onDeleted }: Conve
               {conversation.title}
             </button>
 
-            <button
-              type="button"
-              aria-label={`Rename ${conversation.title}`}
-              onClick={() => void handleRename(conversation.id, conversation.title)}
-              className="rounded p-1 text-ink-muted opacity-0 focus-visible:opacity-100 group-hover:opacity-100"
-            >
-              <Pencil size={14} />
-            </button>
-
-            <button
-              type="button"
-              aria-label={`Delete ${conversation.title}`}
-              onClick={() => void handleDelete(conversation.id, conversation.title)}
-              className="rounded p-1 text-ink-muted opacity-0 focus-visible:opacity-100 group-hover:opacity-100"
-            >
-              <Trash2 size={14} />
-            </button>
+            <ConversationMenu
+              title={conversation.title}
+              onRename={() => setAction({ kind: 'rename', conversation })}
+              onDelete={() => setAction({ kind: 'delete', conversation })}
+            />
           </li>
         ))}
       </ul>
@@ -111,6 +116,31 @@ export function ConversationList({ activeId, onSelect, onNew, onDeleted }: Conve
       </button>
 
       <div className="flex-1 overflow-y-auto px-3 pb-3">{renderList()}</div>
+
+      {/* Keyed by conversation, so the field opens on the title it is about to change. */}
+      {action?.kind === 'rename' && (
+        <RenameConversationDialog
+          key={action.conversation.id}
+          open
+          onOpenChange={closeAction}
+          currentTitle={action.conversation.title}
+          isPending={renameState.isLoading}
+          onRename={(title) => void handleRename(title)}
+        />
+      )}
+
+      {action?.kind === 'delete' && (
+        <ConfirmDialog
+          open
+          onOpenChange={closeAction}
+          title="Delete this conversation?"
+          description={`"${action.conversation.title}" and its messages will be removed. This cannot be undone.`}
+          confirmLabel="Delete"
+          isDestructive
+          isPending={deleteState.isLoading}
+          onConfirm={() => void handleDelete()}
+        />
+      )}
     </div>
   )
 }

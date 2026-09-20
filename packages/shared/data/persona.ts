@@ -1,5 +1,12 @@
 import type { Goal, Persona } from '../schema'
 
+/** Two letters at most: more than that is a name badge, not an avatar. */
+function initialsOf(name: string): string {
+  const parts = name.split(/\s+/).filter(Boolean).slice(0, 2)
+
+  return parts.map((part) => part[0]?.toUpperCase() ?? '').join('') || '?'
+}
+
 export const DANIEL: Persona = {
   userId: 'daniel-tan',
   name: 'Daniel Tan',
@@ -31,3 +38,9 @@ export const GOALS: Goal[] = [
     cadence: 'day',
   },
 ]
+
+export function personaFor(identity: { name?: string | null; email?: string | null }): Persona {
+  const name = identity.name?.trim() || identity.email?.split('@')[0] || DANIEL.name
+
+  return { ...DANIEL, name, initials: initialsOf(name) }
+}

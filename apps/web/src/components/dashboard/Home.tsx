@@ -1,4 +1,5 @@
 import type { DailyRecord, Insights } from '@health/shared/schema'
+import { EmptyCard } from '../states/EmptyCard'
 import { ErrorCard } from '../states/ErrorCard'
 import { SkeletonCard } from '../states/SkeletonCard'
 import { FocusThisWeek } from './FocusThisWeek'
@@ -48,7 +49,11 @@ export function Home({
       )
     }
 
-    if (!insights.data) return null
+    if (!insights.data) {
+      return (
+        <EmptyCard title="No insights yet" message="Nothing has been recorded for this range." />
+      )
+    }
 
     return (
       <>
@@ -74,9 +79,9 @@ export function Home({
       return <ErrorCard title="Couldn't load recent activities" onRetry={records.onRetry} />
     }
 
-    if (!records.data) return <SkeletonCard lines={3} />
+    if (records.isLoading) return <SkeletonCard lines={3} />
 
-    return <RecentActivities records={records.data} />
+    return <RecentActivities records={records.data ?? []} />
   }
 
   return (

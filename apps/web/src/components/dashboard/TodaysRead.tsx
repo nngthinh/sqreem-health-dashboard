@@ -23,6 +23,12 @@ export function TodaysRead({ insights }: { insights: Insights }) {
 
         {/* The score alone is a black box; the drivers make it actionable, and they
             are the same drivers the assistant cites when asked about it. */}
+        {readiness.drivers.length === 0 && (
+          <p className="flex-1 text-sm text-ink-muted">
+            Nothing recorded in this range yet, so there is no score to break down.
+          </p>
+        )}
+
         <ul className="flex-1 space-y-2">
           {readiness.drivers.map((driver) => (
             <li key={driver.metricId} className="flex items-baseline justify-between gap-4 text-sm">
