@@ -17,25 +17,36 @@ function viewSection(view: ViewContext | undefined): string {
 }
 
 /**
- * Why the prompt is shaped this way — every section answers one failure mode we saw:
+ * The prompt is organised around five concerns, in this order.
  *
- * - The persona and goals come first because the model answers "is this good?" questions
- *   against her targets, not against population averages.
- * - The valid identifiers are enumerated verbatim, and the metrics we do NOT have are
- *   named explicitly: a model told only what exists will still invent heart rate or HRV,
- *   but one told those do not exist stops.
- * - "Never calculate" is rule 1 because arithmetic is where a fluent answer goes wrong
- *   invisibly. The digest below already holds every figure, computed by the same engine
- *   the dashboard renders, so the chat cannot contradict the screen.
- * - Gaps are called out as not-zero because the fixture has missing days, and averaging
- *   a gap as 0 understates every metric it touches.
- * - Attainment and adherence are separated because they routinely disagree (a high mean
- *   with few days actually met); reporting only the mean reads as flattery.
- * - The medical-scope line gives one exact sentence to reuse, which keeps the refusal
- *   short instead of turning every ordinary answer into a disclaimer.
- * - The output contract carries two worked examples because the renderer parses these
- *   blocks strictly, and the block holds a REFERENCE only — numbers stay server-side,
- *   which removes the last place a hallucinated figure could reach the screen.
+ * 1. Providing the data. The digest is appended last and carries every figure the
+ *    dashboard shows — readiness, aggregates at 7/30/90d, goal progress, signals,
+ *    coverage — produced by the same engine that renders the screen, so chat and UI
+ *    cannot disagree. Raw daily records are never inlined; anything the digest omits
+ *    is fetched through a tool.
+ *
+ * 2. Structuring the prompt. Persona and goals come first, so "is this good?" is judged
+ *    against her targets rather than population averages. Rules and the output contract
+ *    sit in the middle. The current view and the digest come last, closest to the
+ *    question, because they are the parts that change every request.
+ *
+ * 3. Maintaining context. The prompt holds only what is stable within a turn; the
+ *    transcript carries the rest. The digest is rebuilt per request instead of replayed,
+ *    so a long conversation never drifts onto stale figures.
+ *
+ * 4. Handling unexpected responses. Tools answer { ok: false, reason } rather than
+ *    failing silently, and the prompt tells the model to report that plainly. The
+ *    medical-scope rule supplies one exact sentence to reuse, which keeps an off-scope
+ *    reply short instead of turning every ordinary answer into a disclaimer.
+ *
+ * 5. Preventing invention. This is layered, because any single instruction leaks:
+ *    "never calculate" is rule 1, since arithmetic is where a fluent answer goes wrong
+ *    invisibly; the valid ids are enumerated and the absent ones (heart rate, HRV,
+ *    weight) named explicitly, because a model told only what exists will still invent;
+ *    gaps are declared not-zero, since averaging a missing day as 0 understates the
+ *    metric; attainment and adherence must be reported together, as the mean alone
+ *    flatters; and an insight block carries a reference, never a number, so the figures
+ *    on screen are drawn server-side and a hallucinated one has no route to the user.
  */
 export function buildSystemPrompt(
   persona: Persona,
