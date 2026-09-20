@@ -1,3 +1,4 @@
+import { Button } from './Button'
 import { Modal } from './Modal'
 
 type ConfirmDialogProps = {
@@ -28,22 +29,20 @@ export function ConfirmDialog({
   return (
     <Modal open={open} onOpenChange={onOpenChange} title={title} description={description}>
       <div className="flex justify-end gap-2">
-        <button
-          type="button"
+        <Button
           onClick={() => onOpenChange(false)}
           className="rounded-md border border-line px-3 py-1.5 text-sm text-ink-muted hover:bg-line/40"
         >
           Cancel
-        </button>
+        </Button>
 
-        <button
-          type="button"
+        <Button
           disabled={isPending}
           onClick={onConfirm}
           className={`rounded-md border px-3 py-1.5 text-sm transition-opacity disabled:opacity-40 ${confirmClass}`}
         >
           {isPending ? 'Working…' : confirmLabel}
-        </button>
+        </Button>
       </div>
     </Modal>
   )

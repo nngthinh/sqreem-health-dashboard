@@ -23,7 +23,9 @@ export function MetricChart({
   metricId: MetricId
   goalTarget: number | null
 }) {
-  const data = records.map((r) => ({ date: r.date, value: metricValue(r, metricId) }))
+  // A day with nothing recorded plots at zero rather than breaking the line: the chart
+  // reads as "nothing happened", which is what an empty day means on this axis.
+  const data = records.map((r) => ({ date: r.date, value: metricValue(r, metricId) ?? 0 }))
 
   return (
     <div className="h-72 w-full">
@@ -59,7 +61,6 @@ export function MetricChart({
             stroke={chartColor(Band.Steady)}
             strokeWidth={2}
             dot={false}
-            connectNulls={false}
             isAnimationActive={false}
           />
         </LineChart>

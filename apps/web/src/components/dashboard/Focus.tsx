@@ -1,6 +1,7 @@
 import { type Insights, RANGE_PERIOD_LABELS } from '@health/shared/schema'
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
+import { Button } from '../common/Button'
 import { EmptyCard } from '../states/EmptyCard'
 
 export function Focus({ insights }: { insights: Insights }) {
@@ -41,21 +42,19 @@ export function Focus({ insights }: { insights: Insights }) {
               <p className="min-w-[12rem] flex-1 font-medium">{recommendation.title}</p>
 
               {/* A recommendation you cannot interrogate is just an instruction. */}
-              <button
-                type="button"
+              <Button
                 aria-expanded={openId === recommendation.id}
                 onClick={() => handleToggleWhy(recommendation.id)}
                 className="rounded border border-line px-2 py-1 text-xs text-ink-muted"
               >
                 why?
-              </button>
-              <button
-                type="button"
+              </Button>
+              <Button
                 onClick={() => handleAsk(recommendation.askPrompt)}
                 className="rounded border border-line px-2 py-1 text-xs text-ink-muted"
               >
                 ask
-              </button>
+              </Button>
             </div>
 
             {openId === recommendation.id && (

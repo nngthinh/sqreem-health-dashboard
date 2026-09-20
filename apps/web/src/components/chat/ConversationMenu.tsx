@@ -16,7 +16,7 @@ export function ConversationMenu({ title, onRename, onDelete }: ConversationMenu
     <DropdownMenu.Root>
       <DropdownMenu.Trigger
         aria-label={`Actions for ${title}`}
-        className="rounded p-1 text-ink-muted opacity-0 outline-none hover:text-ink focus-visible:opacity-100 data-[state=open]:opacity-100 group-hover:opacity-100"
+        className="cursor-pointer rounded p-1 text-ink-muted opacity-0 outline-none hover:text-ink focus-visible:opacity-100 data-[state=open]:opacity-100 group-hover:opacity-100"
       >
         <MoreHorizontal size={16} aria-hidden="true" />
       </DropdownMenu.Trigger>

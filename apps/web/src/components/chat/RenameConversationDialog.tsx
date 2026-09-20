@@ -1,5 +1,6 @@
 import { useRef } from 'react'
 import { useForm } from 'react-hook-form'
+import { Button } from '../common/Button'
 import { Modal } from '../common/Modal'
 
 /** The server takes the same bounds, so a rejected title is caught before the request. */
@@ -85,21 +86,20 @@ export function RenameConversationDialog({
         )}
 
         <div className="mt-4 flex justify-end gap-2">
-          <button
-            type="button"
+          <Button
             onClick={() => onOpenChange(false)}
             className="rounded-md border border-line px-3 py-1.5 text-sm text-ink-muted hover:bg-line/40"
           >
             Cancel
-          </button>
+          </Button>
 
-          <button
+          <Button
             type="submit"
             disabled={isPending || isUnchanged}
             className="rounded-md bg-ink px-3 py-1.5 text-sm text-surface transition-opacity disabled:opacity-40"
           >
             {isPending ? 'Saving…' : 'Save'}
-          </button>
+          </Button>
         </div>
       </form>
     </Modal>

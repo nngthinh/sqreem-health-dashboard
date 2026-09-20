@@ -1,4 +1,5 @@
 import { type FormEvent, useState } from 'react'
+import { Button } from '../common/Button'
 
 type ComposerProps = {
   disabled: boolean
@@ -33,13 +34,13 @@ export function Composer({ disabled, initialValue = '', onSend }: ComposerProps)
           autoComplete="off"
           className="flex-1 rounded-md border border-line bg-surface px-3 py-2 text-sm"
         />
-        <button
+        <Button
           type="submit"
           disabled={disabled || draft.trim().length === 0}
-          className="rounded-md bg-ink px-4 py-2 text-sm text-surface transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
+          className="rounded-md bg-ink px-4 py-2 text-sm text-surface transition-opacity disabled:opacity-40"
         >
           Send
-        </button>
+        </Button>
       </form>
     </div>
   )

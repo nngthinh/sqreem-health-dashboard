@@ -1,6 +1,7 @@
 import { METRIC_LABELS, MetricIdSchema } from '@health/shared/schema'
 import { MessageCircle } from 'lucide-react'
 import { useLocation, useNavigate } from 'react-router'
+import { Button } from '../common/Button'
 
 const METRIC_ROUTE = /^\/metric\/([a-z]+)$/
 
@@ -28,14 +29,13 @@ export function ChatFab() {
   }
 
   return (
-    <button
-      type="button"
+    <Button
       aria-label="Ask about this"
       onClick={handleClick}
       className="fixed bottom-5 right-5 z-30 flex items-center gap-2 rounded-full border border-line bg-surface-raised px-4 py-3 text-sm shadow-lg hover:border-ink-muted"
     >
       <MessageCircle size={16} aria-hidden="true" />
       Ask
-    </button>
+    </Button>
   )
 }

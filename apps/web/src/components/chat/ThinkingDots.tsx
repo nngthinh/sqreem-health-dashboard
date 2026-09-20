@@ -4,17 +4,20 @@
  */
 export function ThinkingDots() {
   return (
-    <p className="flex animate-message-in items-center gap-1.5 text-ink-muted">
+    <p className="flex animate-message-in items-center gap-[4.5px] text-ink-muted">
       <span className="sr-only">The assistant is writing a reply</span>
 
-      <span aria-hidden="true" className="h-1.5 w-1.5 animate-thinking rounded-full bg-ink-muted" />
       <span
         aria-hidden="true"
-        className="h-1.5 w-1.5 animate-thinking rounded-full bg-ink-muted [animation-delay:160ms]"
+        className="size-[4.5px] animate-thinking rounded-full bg-ink-muted"
       />
       <span
         aria-hidden="true"
-        className="h-1.5 w-1.5 animate-thinking rounded-full bg-ink-muted [animation-delay:320ms]"
+        className="size-[4.5px] animate-thinking rounded-full bg-ink-muted [animation-delay:160ms]"
+      />
+      <span
+        aria-hidden="true"
+        className="size-[4.5px] animate-thinking rounded-full bg-ink-muted [animation-delay:320ms]"
       />
     </p>
   )

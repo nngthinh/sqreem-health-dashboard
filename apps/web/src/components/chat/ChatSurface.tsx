@@ -7,13 +7,14 @@ import { useChatStream } from '../../features/chat/useChatStream'
 import { useAppDispatch, useAppSelector } from '../../store'
 import { useCreateConversationMutation, useGetConversationQuery } from '../../store/api/chatApi'
 import { StreamStatus, setActiveConversation } from '../../store/chatSlice'
+import { Button } from '../common/Button'
 import { ErrorCard } from '../states/ErrorCard'
 import { SkeletonCard } from '../states/SkeletonCard'
 import { Composer } from './Composer'
 import { ConversationList } from './ConversationList'
 import { MessageBubble } from './MessageBubble'
 import { ThinkingDots } from './ThinkingDots'
-import { ToolChip } from './ToolChip'
+import { ToolLabel } from './ToolLabel'
 
 const METRIC_ROUTE = /^\/metric\/([a-z]+)$/
 
@@ -99,6 +100,11 @@ export function ChatSurface({ conversationId }: { conversationId: string | null 
   const isPendingStored = askedAt !== null && messageCount > askedAt.messageCount
 
   const isAnswering = status === StreamStatus.Streaming && streamingMessage.length === 0
+
+  // Tools can run two at a time, but the row has one wait to explain: the oldest still
+  // running names it, and the rest finish quietly behind it.
+  const runningTool = toolActivity[0]
+
   const isThreadLoading = Boolean(conversationId) && thread.isFetching && !thread.currentData
 
   // A live question is not in the transcript yet, so it is its own anchor; otherwise the
@@ -262,24 +268,22 @@ export function ChatSurface({ conversationId }: { conversationId: string | null 
             <MessageBubble role={MessageRole.Assistant} content={streamingMessage} />
           )}
 
-          {(isAnswering || toolActivity.length > 0) && (
-            // One waiting row: the dots hold the left, and the chips run to their right
-            // as tools come and go, rather than swapping in and out of the feed.
-            <div className="flex flex-wrap items-center gap-2">
+          {(isAnswering || runningTool) && (
+            // One waiting row: the dots hold the left and the label sits beside them,
+            // rather than either swapping in and out of the feed.
+            <div className="flex items-center gap-2">
               {isAnswering && <ThinkingDots />}
 
-              {toolActivity.map((name, index) => (
-                <ToolChip key={name} name={name} index={index} />
-              ))}
+              {runningTool && <ToolLabel name={runningTool} />}
             </div>
           )}
 
           {status === StreamStatus.Error && (
             <div role="alert" className="animate-message-in text-sm text-watch">
               {error ?? 'The assistant stopped mid-answer.'}{' '}
-              <button type="button" className="underline" onClick={handleRetry}>
+              <Button className="underline" onClick={handleRetry}>
                 Retry
-              </button>
+              </Button>
             </div>
           )}
         </div>
@@ -295,8 +299,7 @@ export function ChatSurface({ conversationId }: { conversationId: string | null 
 
       <div className="flex min-w-0 flex-1 flex-col">
         <div className="border-b border-line md:hidden">
-          <button
-            type="button"
+          <Button
             aria-expanded={isListOpen}
             onClick={() => setIsListOpen((open) => !open)}
             className="flex w-full items-center justify-between px-4 py-3 text-sm text-ink-muted"
@@ -307,7 +310,7 @@ export function ChatSurface({ conversationId }: { conversationId: string | null 
               aria-hidden="true"
               className={isListOpen ? 'rotate-180 transition-transform' : 'transition-transform'}
             />
-          </button>
+          </Button>
 
           {isListOpen && (
             <div className="max-h-64 overflow-y-auto border-t border-line">
@@ -361,15 +364,14 @@ function ChatStarter({
 
       <div className="flex flex-wrap justify-center gap-2">
         {SUGGESTIONS.map((suggestion) => (
-          <button
+          <Button
             key={suggestion}
-            type="button"
             disabled={disabled}
             onClick={() => onPick(suggestion)}
-            className="rounded-full border border-line px-3 py-1.5 text-xs text-ink-muted transition-opacity hover:border-ink-muted disabled:cursor-not-allowed disabled:opacity-40"
+            className="rounded-full border border-line px-3 py-1.5 text-xs text-ink-muted transition-opacity hover:border-ink-muted disabled:opacity-40"
           >
             {suggestion}
-          </button>
+          </Button>
         ))}
       </div>
     </div>
