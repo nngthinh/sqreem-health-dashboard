@@ -1,4 +1,11 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "git": {
+    "deploymentEnabled": {
+      "*": false,
+      "main": true
+    }
+  },
   "buildCommand": "npm run db:migrate:deploy && npm run build",
   "outputDirectory": "apps/web/dist",
   "rewrites": [
