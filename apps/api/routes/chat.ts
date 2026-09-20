@@ -20,8 +20,8 @@ import { TOOL_DEFS } from '../llm/tools/index.js'
 import { type LlmMessage, LlmRole } from '../llm/types.js'
 import { checkRateLimit } from '../rateLimit.js'
 
-/** How much of the transcript replays verbatim — what makes "and the month before?" resolve. */
-const HISTORY_EXCHANGES = 10
+/** Bounds the prompt: the tail of the transcript replays, everything older is dropped. */
+const HISTORY_MESSAGES = 10
 
 enum SseEvent {
   Delta = 'delta',
@@ -40,7 +40,7 @@ const write = (stream: SSEStreamingApi, event: SseEvent, data: unknown) =>
   stream.writeSSE({ event, data: JSON.stringify(data) })
 
 /**
- * The route owns three guarantees the loop does not: only the last N exchanges reach the
+ * The route owns three guarantees the loop does not: only the last N messages reach the
  * prompt, only validated blocks reach the client, and every terminal event — success or
  * failure — is persisted before it is sent, so a stream that dies mid-flight still leaves
  * the user with what arrived.
@@ -77,7 +77,7 @@ export function chatRoutes(env: Env) {
       asOf,
     )
 
-    const history = thread.messages.slice(-HISTORY_EXCHANGES * 2).map(toLlmMessage)
+    const history = thread.messages.slice(-HISTORY_MESSAGES).map(toLlmMessage)
     history.push({ role: LlmRole.User, content: message, toolCalls: [] })
 
     const controller = new AbortController()

@@ -61,12 +61,14 @@ export function normaliseBlock(block: InsightBlock, asOf: string): InsightBlock 
 }
 
 /**
- * Deliberately tolerant of how a model actually writes a fence: indented inside a list
- * item, an info string after the tag, a closing fence that is indented or has no blank
- * line before it. Tightening this would not make anything safer — every body still has
- * to survive `JSON.parse` and the schema below — it would only lose blocks.
+ * Matches the fence only; the body runs to the closing backticks and keeps whatever
+ * whitespace it ends with, because `JSON.parse` already ignores that. The pattern is
+ * deliberately loose about how a model writes a fence — indented inside a list item,
+ * an info string after the tag, an indented closing fence — since tightening it would
+ * not make anything safer (every body still faces `JSON.parse` and the schema) and
+ * would only lose blocks.
  */
-const INSIGHT_FENCE = /^[ \t]*`{3,}insight\b[^\n]*\n([\s\S]*?)\n?[ \t]*`{3,}/gm
+const INSIGHT_FENCE = /^[ \t]*`{3,}insight\b[^\n]*\n([\s\S]*?)`{3,}/gm
 
 export const MAX_BLOCKS_PER_MESSAGE = 2
 
