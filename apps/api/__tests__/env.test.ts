@@ -8,7 +8,7 @@ const base = {
   LLM_MODEL: 'gemini-3.8-flash',
   PORT: '8787',
   WEB_ORIGIN: 'http://localhost:5173',
-  RATE_LIMIT_PER_MIN: '4',
+  LLM_MESSAGE_RATE_LIMIT_PER_MIN: '4',
   SESSION_SECRET: 's'.repeat(32),
   DATABASE_URL: 'postgres://health:health@localhost:5432/health',
   AUTH_MODE: 'sso',
