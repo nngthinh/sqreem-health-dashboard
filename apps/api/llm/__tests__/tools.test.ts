@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { MAX_TOOL_ROUNDS, runTool, TOOL_DEFS } from '../tools.js'
+import { MAX_TOOL_ROUNDS, runTool, TOOL_DEFS } from '../tools/index.js'
 
 const USER = 'any-user'
 const TODAY = '2026-09-20'

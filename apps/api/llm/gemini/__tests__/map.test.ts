@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import type { LlmMessage } from '../../types.js'
+import { type LlmMessage, LlmRole } from '../../types.js'
 import { toGeminiContents } from '../map.js'
 
-const user = (content: string): LlmMessage => ({ role: 'user', content, toolCalls: [] })
+const user = (content: string): LlmMessage => ({ role: LlmRole.User, content, toolCalls: [] })
 const assistant = (content: string, toolCalls: LlmMessage['toolCalls'] = []): LlmMessage => ({
-  role: 'assistant',
+  role: LlmRole.Assistant,
   content,
   toolCalls,
 })

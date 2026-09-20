@@ -1,6 +1,12 @@
 import { type Content, GoogleGenAI } from '@google/genai'
 import type { Env } from '../../env.js'
-import type { LlmEvent, LlmProvider, LlmRequest, ToolDef } from '../types.js'
+import {
+  type LlmEvent,
+  LlmEventType,
+  type LlmProvider,
+  type LlmRequest,
+  type ToolDef,
+} from '../types.js'
 import { toGeminiContents } from './map.js'
 
 /**
@@ -24,7 +30,7 @@ export function createGeminiProvider(env: Env): LlmProvider {
       const contents = toGeminiContents(request.messages) as Content[]
 
       if (contents.length === 0) {
-        yield { type: 'error', message: 'No user turn to respond to.' }
+        yield { type: LlmEventType.Error, message: 'No user turn to respond to.' }
         return
       }
 
@@ -44,11 +50,11 @@ export function createGeminiProvider(env: Env): LlmProvider {
         let callIndex = 0
 
         for await (const chunk of response) {
-          if (chunk.text) yield { type: 'text', text: chunk.text }
+          if (chunk.text) yield { type: LlmEventType.Text, text: chunk.text }
 
           for (const call of chunk.functionCalls ?? []) {
             yield {
-              type: 'tool_call',
+              type: LlmEventType.ToolCall,
               id: call.id ?? `call_${callIndex++}`,
               name: call.name ?? '',
               args: call.args ?? {},
@@ -62,10 +68,10 @@ export function createGeminiProvider(env: Env): LlmProvider {
           }
         }
 
-        yield { type: 'done', usage: { inputTokens, outputTokens } }
+        yield { type: LlmEventType.Done, usage: { inputTokens, outputTokens } }
       } catch (error) {
         yield {
-          type: 'error',
+          type: LlmEventType.Error,
           message: error instanceof Error ? error.message : 'LLM request failed',
         }
       }

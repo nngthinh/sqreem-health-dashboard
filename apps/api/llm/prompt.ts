@@ -17,8 +17,25 @@ function viewSection(view: ViewContext | undefined): string {
 }
 
 /**
- * Enumerating the valid identifiers verbatim measurably reduces invented metrics, and
- * the two worked examples pin down the block contract the renderer expects.
+ * Why the prompt is shaped this way — every section answers one failure mode we saw:
+ *
+ * - The persona and goals come first because the model answers "is this good?" questions
+ *   against her targets, not against population averages.
+ * - The valid identifiers are enumerated verbatim, and the metrics we do NOT have are
+ *   named explicitly: a model told only what exists will still invent heart rate or HRV,
+ *   but one told those do not exist stops.
+ * - "Never calculate" is rule 1 because arithmetic is where a fluent answer goes wrong
+ *   invisibly. The digest below already holds every figure, computed by the same engine
+ *   the dashboard renders, so the chat cannot contradict the screen.
+ * - Gaps are called out as not-zero because the fixture has missing days, and averaging
+ *   a gap as 0 understates every metric it touches.
+ * - Attainment and adherence are separated because they routinely disagree (a high mean
+ *   with few days actually met); reporting only the mean reads as flattery.
+ * - The medical-scope line gives one exact sentence to reuse, which keeps the refusal
+ *   short instead of turning every ordinary answer into a disclaimer.
+ * - The output contract carries two worked examples because the renderer parses these
+ *   blocks strictly, and the block holds a REFERENCE only — numbers stay server-side,
+ *   which removes the last place a hallucinated figure could reach the screen.
  */
 export function buildSystemPrompt(
   persona: Persona,

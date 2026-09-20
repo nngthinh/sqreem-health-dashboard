@@ -1,4 +1,4 @@
-import type { LlmMessage } from '../types.js'
+import { type LlmMessage, LlmRole } from '../types.js'
 
 export type GeminiPart =
   | { text: string }
@@ -18,7 +18,7 @@ export function toGeminiContents(messages: LlmMessage[]): GeminiContent[] {
   const expanded: GeminiContent[] = []
 
   for (const message of messages) {
-    if (message.role === 'user') {
+    if (message.role === LlmRole.User) {
       if (message.content.length > 0) {
         expanded.push({ role: 'user', parts: [{ text: message.content }] })
       }
