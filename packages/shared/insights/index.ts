@@ -49,7 +49,7 @@ export function buildInsights(
   const { movers, steady } = splitMovers(trends)
 
   const { resolved, empty } = splitGoals(records, goals, range)
-  const signals = detectSignals(trends, resolved)
+  const signals = detectSignals(trends, resolved, range)
 
   return {
     range,

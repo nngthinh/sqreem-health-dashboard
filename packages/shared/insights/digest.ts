@@ -57,7 +57,7 @@ export function buildDigest(records: DailyRecord[], goals: Goal[], asOf: string)
   const { resolved, empty } = splitGoals(records, goals, PRIMARY_RANGE)
 
   const readiness = computeReadiness(records, goals)
-  const signals = detectSignals(primaryTrends, resolved)
+  const signals = detectSignals(primaryTrends, resolved, PRIMARY_RANGE)
   const coverage = computeCoverage(records, PRIMARY_RANGE)
 
   const lines: string[] = [`DATA DIGEST (as of ${asOf}, all figures computed, none estimated)`]
