@@ -4,12 +4,19 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./schema": "./schema/index.ts",
-    "./data": "./data/index.ts",
-    "./insights": "./insights/index.ts"
+    "./schema": { "types": "./schema/index.ts", "default": "./dist/schema.js" },
+    "./data": { "types": "./data/index.ts", "default": "./dist/data.js" },
+    "./insights": { "types": "./insights/index.ts", "default": "./dist/insights.js" }
+  },
+  "//build": "The Vercel API function resolves @health/shared through the node_modules workspace symlink and never transpiles it, so the default export condition points at pre-built JS. The types condition still points at the .ts source so tsc's bundler resolution keeps full type fidelity.",
+  "scripts": {
+    "build": "esbuild schema/index.ts --bundle --format=esm --platform=node --target=node22 --external:zod --external:date-fns --outfile=dist/schema.js && esbuild data/index.ts --bundle --format=esm --platform=node --target=node22 --external:zod --external:date-fns --outfile=dist/data.js && esbuild insights/index.ts --bundle --format=esm --platform=node --target=node22 --external:zod --external:date-fns --outfile=dist/insights.js"
   },
   "dependencies": {
     "zod": "^4.1.0",
     "date-fns": "^4.1.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2"
   }
 }

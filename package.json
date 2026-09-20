@@ -11,7 +11,7 @@
   ],
   "scripts": {
     "dev": "npm run dev --workspace=@health/api & npm run dev --workspace=@health/web",
-    "build": "npm run build --workspace=@health/web",
+    "build": "npm run build --workspace=@health/shared && npm run build --workspace=@health/web",
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "biome check .",
