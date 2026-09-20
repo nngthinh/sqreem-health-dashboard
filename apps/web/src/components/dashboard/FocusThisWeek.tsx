@@ -12,7 +12,7 @@ export function FocusThisWeek({ insights }: { insights: Insights }) {
   }
 
   const handleAsk = (prompt: string) => {
-    void navigate(`/chat?q=${encodeURIComponent(prompt)}`)
+    void navigate(`/chats?q=${encodeURIComponent(prompt)}`)
   }
 
   const renderRecommendations = () => {
