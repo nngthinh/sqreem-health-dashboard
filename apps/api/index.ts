@@ -1,6 +1,8 @@
 import { serve } from '@hono/node-server'
 import { createApp } from './app'
-import { env } from './env'
+import { assertBootable, env } from './env'
+
+assertBootable(env)
 
 console.log(
   `[boot] authMode=${env.authMode} devBypass=${env.devBypass} provider=${env.llm.provider} model=${env.llm.model}`,

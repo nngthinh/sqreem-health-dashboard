@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { parseEnv } from '../env'
+import { assertBootable, parseEnv } from '../env'
 
 const base = {
   NODE_ENV: 'development',
@@ -45,5 +45,37 @@ describe('parseEnv', () => {
 
   it('rejects a session secret shorter than 32 characters', () => {
     expect(() => parseEnv({ ...base, SESSION_SECRET: 'tooshort' })).toThrow()
+  })
+})
+
+describe('assertBootable', () => {
+  const google = {
+    GOOGLE_CLIENT_ID: 'client-id',
+    GOOGLE_CLIENT_SECRET: 'client-secret',
+    GOOGLE_REDIRECT_URI: 'https://health.example/api/auth/callback',
+  }
+
+  it('refuses to boot production SSO without Google credentials', () => {
+    const env = parseEnv({ ...base, NODE_ENV: 'production' })
+    expect(() => assertBootable(env)).toThrow(/GOOGLE_CLIENT_ID/)
+  })
+
+  it('boots production SSO once Google credentials are present', () => {
+    const env = parseEnv({ ...base, NODE_ENV: 'production', ...google })
+    expect(() => assertBootable(env)).not.toThrow()
+  })
+
+  it('does not require Google credentials outside production', () => {
+    expect(() => assertBootable(parseEnv(base))).not.toThrow()
+  })
+
+  it('does not require Google credentials in demo mode', () => {
+    const env = parseEnv({
+      ...base,
+      NODE_ENV: 'production',
+      AUTH_MODE: 'demo',
+      DEMO_ACCESS_CODE: 'c'.repeat(32),
+    })
+    expect(() => assertBootable(env)).not.toThrow()
   })
 })

@@ -77,4 +77,16 @@ export function parseEnv(raw: Record<string, string | undefined>): Env {
   }
 }
 
+/**
+ * §3.5: guardrails that belong to booting a server, not to reading config.
+ * Kept out of `parseEnv` so the parser stays a pure total function over its input.
+ */
+export function assertBootable(env: Env): void {
+  if (env.authMode === 'sso' && env.isProduction && !env.google) {
+    throw new Error(
+      'AUTH_MODE=sso in production requires GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET and GOOGLE_REDIRECT_URI. Refusing to start.',
+    )
+  }
+}
+
 export const env: Env = parseEnv(process.env)
