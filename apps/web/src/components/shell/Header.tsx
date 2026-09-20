@@ -1,4 +1,5 @@
 import { format } from 'date-fns'
+import { Menu } from 'lucide-react'
 import { useAppDispatch } from '../../store'
 import { setDrawerOpen } from '../../store/uiSlice'
 import { RangeTabs } from './RangeTabs'
@@ -13,7 +14,7 @@ export function Header({ greeting }: { greeting: string }) {
         className="md:hidden"
         onClick={() => dispatch(setDrawerOpen(true))}
       >
-        ☰
+        <Menu size={20} />
       </button>
       <h1 className="flex-1 text-base font-medium">{greeting}</h1>
       <RangeTabs />

@@ -1,4 +1,5 @@
 import { Band, type GoalId, type Insights } from '@health/shared/schema'
+import { TriangleAlert } from 'lucide-react'
 import { GoalBar } from '../charts/GoalBar'
 import { EmptyCard } from '../states/EmptyCard'
 
@@ -30,14 +31,13 @@ export function GoalsStrip({ insights }: { insights: Insights }) {
             {/* Attainment alone hides the story: a flattering average beside a poor
                 adherence count is exactly the pair a single number would lose. */}
             <span
-              className={`text-sm ${goal.status === Band.Watch ? 'text-watch' : 'text-ink-muted'}`}
+              className={`flex items-center gap-1.5 text-sm ${
+                goal.status === Band.Watch ? 'text-watch' : 'text-ink-muted'
+              }`}
             >
               met {goal.met} of {goal.of} {goal.unit === 'h' ? 'nights' : 'days'}
               {goal.status === Band.Watch && (
-                <span role="img" aria-label="needs attention">
-                  {' '}
-                  ⚠
-                </span>
+                <TriangleAlert size={14} aria-label="needs attention" />
               )}
             </span>
           </li>

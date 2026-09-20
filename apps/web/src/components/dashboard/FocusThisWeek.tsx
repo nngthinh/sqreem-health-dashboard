@@ -2,12 +2,6 @@ import type { Insights } from '@health/shared/schema'
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
 
-const HEADING = (
-  <h2 id="focus-heading" className="mb-3 text-xs uppercase tracking-wide text-ink-muted">
-    Focus this week
-  </h2>
-)
-
 export function FocusThisWeek({ insights }: { insights: Insights }) {
   const navigate = useNavigate()
 
@@ -21,19 +15,14 @@ export function FocusThisWeek({ insights }: { insights: Insights }) {
     void navigate(`/chat?q=${encodeURIComponent(prompt)}`)
   }
 
-  if (insights.recommendations.length === 0) {
-    return (
-      <section aria-labelledby="focus-heading">
-        {HEADING}
+  const renderRecommendations = () => {
+    if (insights.recommendations.length === 0) {
+      return (
         <p className="text-sm text-ink-muted">Nothing needs attention this week — keep going.</p>
-      </section>
-    )
-  }
+      )
+    }
 
-  return (
-    <section aria-labelledby="focus-heading">
-      {HEADING}
-
+    return (
       <ol className="space-y-2">
         {insights.recommendations.map((recommendation, index) => (
           <li
@@ -75,6 +64,16 @@ export function FocusThisWeek({ insights }: { insights: Insights }) {
           </li>
         ))}
       </ol>
+    )
+  }
+
+  return (
+    <section aria-labelledby="focus-heading">
+      <h2 id="focus-heading" className="mb-3 text-xs uppercase tracking-wide text-ink-muted">
+        Focus this week
+      </h2>
+
+      {renderRecommendations()}
     </section>
   )
 }

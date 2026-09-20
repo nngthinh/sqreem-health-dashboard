@@ -19,9 +19,9 @@ export function formatMetric(value: number | null, metricId: MetricId): string {
   }
 }
 
+/** Magnitude only — the direction is drawn as an icon beside it. */
 export function formatDelta(deltaPct: number | null): string {
   if (deltaPct === null) return 'no comparison'
 
-  const arrow = deltaPct > 0 ? '▲' : deltaPct < 0 ? '▼' : '·'
-  return `${arrow} ${Math.abs(Math.round(deltaPct))}%`
+  return `${Math.abs(Math.round(deltaPct))}%`
 }
