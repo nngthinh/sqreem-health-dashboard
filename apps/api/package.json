@@ -7,9 +7,11 @@
     "dev": "tsx watch --env-file-if-exists=.env index.ts"
   },
   "dependencies": {
+    "@google/genai": "^2.23.0",
     "@health/shared": "*",
     "@hono/node-server": "^1.19.0",
     "@neondatabase/serverless": "^1.1.0",
+    "date-fns": "^4.1.0",
     "drizzle-orm": "^0.45.2",
     "hono": "^4.9.0",
     "zod": "^4.1.0"
