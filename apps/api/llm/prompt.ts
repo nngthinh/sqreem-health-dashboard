@@ -2,6 +2,7 @@ import {
   type ChatView,
   GOAL_IDS,
   type Goal,
+  MAX_BLOCKS_PER_MESSAGE,
   METRIC_IDS,
   type Persona,
   RANGES,
@@ -89,7 +90,7 @@ HARD RULES
 6. For anything outside this data, give one short line of scope and stop.
 
 OUTPUT CONTRACT
-Short markdown prose, plus at most two fenced \`insight\` blocks the app renders as real charts. A block is a REFERENCE only — the app draws the numbers. Never write a number inside one.
+Short markdown prose, plus at most ${MAX_BLOCKS_PER_MESSAGE} fenced \`insight\` blocks the app renders as real charts. A block is a REFERENCE only — the app draws the numbers. Never write a number inside one.
 
 \`\`\`insight
 { "kind": "metric", "metricId": "sleep", "range": 30 }

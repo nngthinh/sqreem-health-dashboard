@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { BlockKind, extractInsightBlocks, Tone } from '../blocks.js'
+import { BlockKind, extractInsightBlocks, MAX_BLOCKS_PER_MESSAGE, Tone } from '../blocks.js'
 
 describe('extractInsightBlocks', () => {
   it('extracts a well-formed block', () => {
@@ -67,9 +67,41 @@ describe('extractInsightBlocks', () => {
     expect(extractInsightBlocks(md).blocks).toEqual([])
   })
 
-  it('caps a reply at two blocks', () => {
+  it('caps a reply at the documented number of blocks', () => {
     const one = '```insight\n{ "kind": "goal", "goalId": "sleep" }\n```\n'
 
-    expect(extractInsightBlocks(one.repeat(5)).blocks).toHaveLength(2)
+    expect(extractInsightBlocks(one.repeat(5)).blocks).toHaveLength(MAX_BLOCKS_PER_MESSAGE)
+  })
+})
+
+/**
+ * A model writes a fence however it likes. Each of these is a real shape one emits, and
+ * losing a block to any of them would be a silently missing chart, so they are pinned.
+ */
+describe('extractInsightBlocks whitespace tolerance', () => {
+  const GOAL = '{ "kind": "goal", "goalId": "sleep" }'
+  const expected = [{ kind: BlockKind.Goal, goalId: 'sleep' }]
+
+  it.each([
+    ['padding inside the object', '```insight\n{   "kind":"goal",   "goalId":"sleep"   }\n```'],
+    ['trailing space after the tag', `\`\`\`insight \n${GOAL}\n\`\`\``],
+    ['blank lines around the body', `\`\`\`insight\n\n${GOAL}\n\n\`\`\``],
+    ['an info string after the tag', `\`\`\`insight chart\n${GOAL}\n\`\`\``],
+    ['an indented fence inside a list item', `- here:\n  \`\`\`insight\n  ${GOAL}\n  \`\`\``],
+    ['no newline before the closing fence', `\`\`\`insight\n${GOAL}\`\`\``],
+    ['CRLF line endings', `\`\`\`insight\r\n${GOAL}\r\n\`\`\``],
+    ['four backticks', `\`\`\`\`insight\n${GOAL}\n\`\`\`\``],
+  ])('extracts through %s', (_name, md) => {
+    expect(extractInsightBlocks(md).blocks).toEqual(expected)
+  })
+
+  it.each([
+    ['an empty object', '```insight\n{}\n```'],
+    ['an object of only whitespace', '```insight\n{    }\n```'],
+  ])('drops %s, which parses but is not a block', (_name, md) => {
+    const { blocks, dropped } = extractInsightBlocks(md)
+
+    expect(blocks).toEqual([])
+    expect(dropped).toBe(1)
   })
 })

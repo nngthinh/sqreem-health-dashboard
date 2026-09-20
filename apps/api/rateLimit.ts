@@ -3,9 +3,10 @@ const WINDOW_MS = 60_000
 type Bucket = { count: number; resetAt: number }
 
 /**
- * In-process and per-user: one chat turn can cost several model requests against a
- * shared per-project quota, so the ceiling is deliberately low. A single instance
- * makes a Map enough; a fleet would move this to the database or a cache.
+ * In-process and per-user. The ceiling is RATE_LIMIT_PER_MIN, 4 chat requests per
+ * authenticated user per minute: one turn can spend up to MAX_TOOL_ROUNDS + 1 model
+ * requests against a shared per-project quota, so 4 turns is already ~20 requests.
+ * A single instance makes a Map enough; a fleet would move this to a shared store.
  */
 const buckets = new Map<string, Bucket>()
 
