@@ -23,6 +23,9 @@ import { checkRateLimit } from '../rateLimit.js'
 /** Bounds the prompt: the tail of the transcript replays, everything older is dropped. */
 const HISTORY_MESSAGES = 10
 
+/** What an internal failure reads as on screen; the cause goes to the server log. */
+const STREAM_FAILED = 'The assistant stopped mid-answer. Please try again.'
+
 enum SseEvent {
   Delta = 'delta',
   Tool = 'tool',
@@ -130,10 +133,11 @@ export function chatRoutes(env: Env) {
           }
         }
       } catch (error) {
-        await write(stream, SseEvent.Error, {
-          message: error instanceof Error ? error.message : 'stream failed',
-          partial: null,
-        })
+        // An internal failure is logged in full and described in one line: raw error
+        // text is for the server log, never for the transcript.
+        console.error('[chat] stream failed', error)
+
+        await write(stream, SseEvent.Error, { message: STREAM_FAILED, partial: null })
       }
     })
   })

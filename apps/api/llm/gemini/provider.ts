@@ -9,6 +9,9 @@ import {
 } from '../types.js'
 import { toGeminiContents } from './map.js'
 
+/** What a failed turn reads as on screen, whatever went wrong upstream. */
+const UNAVAILABLE = 'The assistant is unavailable right now. Please try again.'
+
 /**
  * `parametersJsonSchema` rather than `parameters`: our tool definitions are plain JSON
  * Schema, which is the field that accepts them without a hand-written SDK Schema object.
@@ -70,10 +73,13 @@ export function createGeminiProvider(env: Env): LlmProvider {
 
         yield { type: LlmEventType.Done, usage: { inputTokens, outputTokens } }
       } catch (error) {
-        yield {
-          type: LlmEventType.Error,
-          message: error instanceof Error ? error.message : 'LLM request failed',
-        }
+        // The SDK puts the provider's whole error body in `message`, and that body
+        // travels to the browser unchanged if it is passed on: a wall of JSON for the
+        // user and upstream detail the client has no business seeing. Log it whole,
+        // hand back one sentence.
+        console.error('[llm] request failed', error)
+
+        yield { type: LlmEventType.Error, message: UNAVAILABLE }
       }
     },
   }
