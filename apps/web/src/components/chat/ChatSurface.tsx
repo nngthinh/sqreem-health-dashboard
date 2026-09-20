@@ -11,6 +11,7 @@ import { SkeletonCard } from '../states/SkeletonCard'
 import { Composer } from './Composer'
 import { ConversationList } from './ConversationList'
 import { MessageBubble } from './MessageBubble'
+import { ThinkingDots } from './ThinkingDots'
 import { ToolChip } from './ToolChip'
 
 const METRIC_ROUTE = /^\/metric\/([a-z]+)$/
@@ -29,7 +30,9 @@ export function ChatSurface({ conversationId }: { conversationId: string | null 
   const navigate = useNavigate()
   const [params] = useSearchParams()
 
-  const { streamingMessage, status, toolActivity, error } = useAppSelector((state) => state.chat)
+  const { pendingMessage, streamingMessage, status, toolActivity, error } = useAppSelector(
+    (state) => state.chat,
+  )
   const { send, abort } = useChatStream()
 
   const [createConversation] = useCreateConversationMutation()
@@ -44,9 +47,17 @@ export function ChatSurface({ conversationId }: { conversationId: string | null 
   const view = parseView(params.get('from'))
   const messages = thread.data?.messages ?? []
 
+  // The server stores the question as it answers it, so until the refetched transcript
+  // carries it the asker would watch their own words vanish. Shown from here until then.
+  const isPendingStored = messages.some(
+    (message) => message.role === MessageRole.User && message.content === pendingMessage,
+  )
+  const isAnswering = status === StreamStatus.Streaming && streamingMessage.length === 0
+
   // One number that grows with everything in the feed, so the scroll effect has a
   // single dependency it actually reads.
-  const feedLength = messages.length + toolActivity.length + streamingMessage.length
+  const feedLength =
+    messages.length + toolActivity.length + streamingMessage.length + pendingMessage.length
 
   useEffect(() => {
     dispatch(setActiveConversation(conversationId))
@@ -158,6 +169,10 @@ export function ChatSurface({ conversationId }: { conversationId: string | null 
 
             {conversationId && renderThread()}
 
+            {pendingMessage.length > 0 && !isPendingStored && (
+              <MessageBubble role={MessageRole.User} content={pendingMessage} />
+            )}
+
             {streamingMessage.length > 0 && (
               <MessageBubble role={MessageRole.Assistant} content={streamingMessage} />
             )}
@@ -165,6 +180,8 @@ export function ChatSurface({ conversationId }: { conversationId: string | null 
             {toolActivity.map((name) => (
               <ToolChip key={name} name={name} />
             ))}
+
+            {isAnswering && toolActivity.length === 0 && <ThinkingDots />}
 
             {status === StreamStatus.Error && (
               <div role="alert" className="animate-message-in text-sm text-watch">

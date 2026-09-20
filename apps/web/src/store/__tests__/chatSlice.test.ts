@@ -3,6 +3,7 @@ import {
   appendDelta,
   reducer,
   StreamStatus,
+  setActiveConversation,
   setToolActivity,
   startStream,
   streamDone,
@@ -16,7 +17,10 @@ describe('chatSlice', () => {
   })
 
   it('accumulates deltas into the streaming buffer', () => {
-    let state = reducer(undefined, startStream('c1'))
+    let state = reducer(
+      undefined,
+      startStream({ conversationId: 'c1', message: 'how am I doing?' }),
+    )
     state = reducer(state, appendDelta('Your '))
     state = reducer(state, appendDelta('sleep'))
 
@@ -25,7 +29,10 @@ describe('chatSlice', () => {
   })
 
   it('tracks tool activity so waiting is legible rather than dead air', () => {
-    let state = reducer(undefined, startStream('c1'))
+    let state = reducer(
+      undefined,
+      startStream({ conversationId: 'c1', message: 'how am I doing?' }),
+    )
 
     state = reducer(
       state,
@@ -41,7 +48,10 @@ describe('chatSlice', () => {
   })
 
   it('clears the buffer when the turn completes', () => {
-    let state = reducer(undefined, startStream('c1'))
+    let state = reducer(
+      undefined,
+      startStream({ conversationId: 'c1', message: 'how am I doing?' }),
+    )
     state = reducer(state, appendDelta('hello'))
     state = reducer(state, streamDone())
 
@@ -50,7 +60,10 @@ describe('chatSlice', () => {
   })
 
   it('keeps the partial response in place when the stream fails', () => {
-    let state = reducer(undefined, startStream('c1'))
+    let state = reducer(
+      undefined,
+      startStream({ conversationId: 'c1', message: 'how am I doing?' }),
+    )
     state = reducer(state, appendDelta('half an ans'))
     state = reducer(state, streamFailed('connection lost'))
 
@@ -59,11 +72,31 @@ describe('chatSlice', () => {
     expect(state.error).toBe('connection lost')
   })
 
+  it('keeps the question on screen after the turn, until the transcript catches up', () => {
+    let state = reducer(undefined, startStream({ conversationId: 'c1', message: 'why?' }))
+    state = reducer(state, streamDone())
+
+    expect(state.pendingMessage).toBe('why?')
+  })
+
+  it('drops a half-finished turn when another conversation is opened', () => {
+    let state = reducer(undefined, startStream({ conversationId: 'c1', message: 'why?' }))
+    state = reducer(state, appendDelta('because'))
+    state = reducer(state, setActiveConversation('c2'))
+
+    expect(state.pendingMessage).toBe('')
+    expect(state.streamingMessage).toBe('')
+    expect(state.status).toBe(StreamStatus.Idle)
+  })
+
   it('resets the buffer when a new stream starts', () => {
-    let state = reducer(undefined, startStream('c1'))
+    let state = reducer(
+      undefined,
+      startStream({ conversationId: 'c1', message: 'how am I doing?' }),
+    )
     state = reducer(state, appendDelta('old'))
     state = reducer(state, streamFailed('x'))
-    state = reducer(state, startStream('c1'))
+    state = reducer(state, startStream({ conversationId: 'c1', message: 'how am I doing?' }))
 
     expect(state.streamingMessage).toBe('')
     expect(state.error).toBeNull()

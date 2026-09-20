@@ -16,6 +16,21 @@
   /* A message lands rather than appearing, so a new turn reads as new. */
   --animate-message-in: message-in 220ms ease-out;
 
+  /* Three dots breathing in turn: a wait with a pulse reads as working, not stuck. */
+  --animate-thinking: thinking 1.2s ease-in-out infinite;
+
+  @keyframes thinking {
+    0%,
+    100% {
+      opacity: 0.25;
+      transform: translateY(0);
+    }
+    40% {
+      opacity: 1;
+      transform: translateY(-2px);
+    }
+  }
+
   @keyframes message-in {
     from {
       opacity: 0;

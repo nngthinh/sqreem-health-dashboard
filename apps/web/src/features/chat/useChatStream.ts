@@ -113,7 +113,7 @@ export function useChatStream() {
         }
       }
 
-      dispatch(startStream(conversationId))
+      dispatch(startStream({ conversationId, message }))
 
       try {
         const response = await fetch('/api/chat', {

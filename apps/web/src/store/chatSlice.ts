@@ -19,6 +19,8 @@ type ToolActivity = { name: string; status: ToolActivityStatus }
  */
 type ChatState = {
   activeConversationId: string | null
+  /** The question of the turn in flight: the server has not stored it yet. */
+  pendingMessage: string
   streamingMessage: string
   status: StreamStatus
   toolActivity: string[]
@@ -27,6 +29,7 @@ type ChatState = {
 
 const initialState: ChatState = {
   activeConversationId: null,
+  pendingMessage: '',
   streamingMessage: '',
   status: StreamStatus.Idle,
   toolActivity: [],
@@ -37,12 +40,21 @@ const chatSlice = createSlice({
   name: 'chat',
   initialState,
   reducers: {
+    // Another conversation's half-finished turn has no meaning in this one.
     setActiveConversation(state, action: PayloadAction<string | null>) {
+      if (state.activeConversationId === action.payload) return
+
       state.activeConversationId = action.payload
+      state.pendingMessage = ''
+      state.streamingMessage = ''
+      state.status = StreamStatus.Idle
+      state.toolActivity = []
+      state.error = null
     },
 
-    startStream(state, action: PayloadAction<string>) {
-      state.activeConversationId = action.payload
+    startStream(state, action: PayloadAction<{ conversationId: string; message: string }>) {
+      state.activeConversationId = action.payload.conversationId
+      state.pendingMessage = action.payload.message
       state.streamingMessage = ''
       state.status = StreamStatus.Streaming
       state.toolActivity = []
@@ -72,6 +84,8 @@ const chatSlice = createSlice({
 
     streamDone(state) {
       state.status = StreamStatus.Idle
+      // pendingMessage outlives the turn: the refetched transcript takes a moment to
+      // arrive, and the question must not blink out of the feed while it does.
       state.streamingMessage = ''
       state.toolActivity = []
       state.error = null
