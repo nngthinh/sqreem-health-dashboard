@@ -20,7 +20,7 @@ export function Sidebar({ me, collapsed }: { me: Me | undefined; collapsed: bool
         {!collapsed && <span>Vitals</span>}
       </div>
 
-      <ul className="flex-1 px-2">
+      <ul className="flex-1 overflow-y-auto px-2">
         {items.map((item) => (
           <li key={item.to}>
             <NavLink
