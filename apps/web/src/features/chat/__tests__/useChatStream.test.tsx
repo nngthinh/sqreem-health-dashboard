@@ -1,5 +1,5 @@
 import { configureStore } from '@reduxjs/toolkit'
-import { renderHook } from '@testing-library/react'
+import { renderHook, waitFor } from '@testing-library/react'
 import type { ReactNode } from 'react'
 import { Provider } from 'react-redux'
 import { afterEach, describe, expect, it, vi } from 'vitest'
@@ -68,7 +68,7 @@ describe('useChatStream', () => {
     expect(store.getState().chat.streamingMessage).toBe('Hello')
   })
 
-  it('shows a tool as running until its done frame arrives', async () => {
+  it('holds a fast tool on screen long enough to read before clearing it', async () => {
     const store = makeStore()
     stubStream([
       'event: tool\ndata: {"name":"get_metric_series","status":"running"}\n\n',
@@ -78,7 +78,26 @@ describe('useChatStream', () => {
     const { result } = renderStream(store)
     await result.current.send('c1', 'steps?')
 
-    expect(store.getState().chat.toolActivity).toEqual([])
+    expect(store.getState().chat.toolActivity).toEqual(['get_metric_series'])
+
+    await waitFor(() => expect(store.getState().chat.toolActivity).toEqual([]))
+  })
+
+  it('drops a held chip when the turn is abandoned', async () => {
+    const store = makeStore()
+    stubStream([
+      'event: tool\ndata: {"name":"get_metric_series","status":"running"}\n\n',
+      'event: tool\ndata: {"name":"get_metric_series","status":"done"}\n\n',
+    ])
+
+    const { result } = renderStream(store)
+    await result.current.send('c1', 'steps?')
+    result.current.abort()
+
+    await new Promise((resolve) => setTimeout(resolve, 600))
+
+    // The pending hide was cancelled with the turn, so it cannot fire into the next one.
+    expect(store.getState().chat.toolActivity).toEqual(['get_metric_series'])
   })
 
   it('keeps the partial answer on screen when the server reports an error', async () => {

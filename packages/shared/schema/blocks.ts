@@ -70,8 +70,6 @@ export function normaliseBlock(block: InsightBlock, asOf: string): InsightBlock 
  */
 const INSIGHT_FENCE = /^[ \t]*`{3,}insight\b[^\n]*\n([\s\S]*?)`{3,}/gm
 
-export const MAX_BLOCKS_PER_MESSAGE = 2
-
 /**
  * Parse then validate, both failing safe: a block that does not parse or does not
  * validate is dropped and the prose around it still arrives. An unclosed fence —
@@ -101,5 +99,5 @@ export function extractInsightBlocks(markdown: string): {
     else dropped += 1
   }
 
-  return { blocks: blocks.slice(0, MAX_BLOCKS_PER_MESSAGE), dropped }
+  return { blocks, dropped }
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { BlockKind, extractInsightBlocks, MAX_BLOCKS_PER_MESSAGE, Tone } from '../blocks.js'
+import { BlockKind, extractInsightBlocks, Tone } from '../blocks.js'
 
 describe('extractInsightBlocks', () => {
   it('extracts a well-formed block', () => {
@@ -71,10 +71,10 @@ describe('extractInsightBlocks', () => {
     expect(extractInsightBlocks(md).blocks).toEqual([])
   })
 
-  it('caps a reply at the documented number of blocks', () => {
+  it('keeps every block a reply makes, however many that is', () => {
     const one = '```insight\n{ "kind": "goal", "goalId": "sleep" }\n```\n'
 
-    expect(extractInsightBlocks(one.repeat(5)).blocks).toHaveLength(MAX_BLOCKS_PER_MESSAGE)
+    expect(extractInsightBlocks(one.repeat(5)).blocks).toHaveLength(5)
   })
 })
 

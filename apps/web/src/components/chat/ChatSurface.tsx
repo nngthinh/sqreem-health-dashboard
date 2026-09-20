@@ -2,6 +2,7 @@ import { type ChatView, MessageRole, MetricIdSchema } from '@health/shared/schem
 import { ChevronDown } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router'
+import useLocalStorage from 'react-use/lib/useLocalStorage'
 import { useChatStream } from '../../features/chat/useChatStream'
 import { useAppDispatch, useAppSelector } from '../../store'
 import { useCreateConversationMutation, useGetConversationQuery } from '../../store/api/chatApi'
@@ -15,6 +16,9 @@ import { ThinkingDots } from './ThinkingDots'
 import { ToolChip } from './ToolChip'
 
 const METRIC_ROUTE = /^\/metric\/([a-z]+)$/
+
+/** Which chat was open last, so returning to the tab returns to the conversation. */
+const LAST_CONVERSATION_KEY = 'chat:last-conversation'
 
 /** What the user was looking at when they asked, so "this" in a question has a referent. */
 function parseView(from: string | null): ChatView | undefined {
@@ -41,7 +45,12 @@ export function ChatSurface({ conversationId }: { conversationId: string | null 
   // On a phone the list would eat the whole screen, so it collapses behind a header.
   const [isListOpen, setIsListOpen] = useState(false)
 
+  const [lastConversationId, setLastConversationId, forgetLastConversation] =
+    useLocalStorage<string>(LAST_CONVERSATION_KEY)
+
   const scrollRef = useRef<HTMLDivElement>(null)
+  // Reopening is a landing behaviour, not a rule: after that, /chats means a new chat.
+  const hasReopened = useRef(false)
 
   const prefill = params.get('q') ?? ''
   const view = parseView(params.get('from'))
@@ -62,6 +71,25 @@ export function ChatSurface({ conversationId }: { conversationId: string | null 
   useEffect(() => {
     dispatch(setActiveConversation(conversationId))
   }, [conversationId, dispatch])
+
+  useEffect(() => {
+    if (hasReopened.current) return
+    hasReopened.current = true
+
+    // A seeded question is its own new chat, so it never reopens the old one.
+    if (conversationId || prefill || !lastConversationId) return
+
+    void navigate(`/chats/${lastConversationId}`, { replace: true })
+  }, [conversationId, lastConversationId, prefill, navigate])
+
+  useEffect(() => {
+    if (conversationId) setLastConversationId(conversationId)
+  }, [conversationId, setLastConversationId])
+
+  // A conversation that no longer loads is not worth reopening tomorrow either.
+  useEffect(() => {
+    if (thread.isError) forgetLastConversation()
+  }, [thread.isError, forgetLastConversation])
 
   // A stream that outlives the panel would keep writing into a buffer nobody reads.
   useEffect(() => abort, [abort])
@@ -92,6 +120,7 @@ export function ChatSurface({ conversationId }: { conversationId: string | null 
 
   const handleNew = () => {
     setIsListOpen(false)
+    forgetLastConversation()
     void navigate('/chats')
   }
 
@@ -100,6 +129,7 @@ export function ChatSurface({ conversationId }: { conversationId: string | null 
   }
 
   const handleDeleted = (id: string) => {
+    if (id === lastConversationId) forgetLastConversation()
     if (id === conversationId) void navigate('/chats')
   }
 
@@ -177,16 +207,17 @@ export function ChatSurface({ conversationId }: { conversationId: string | null 
               <MessageBubble role={MessageRole.Assistant} content={streamingMessage} />
             )}
 
-            {toolActivity.length > 0 && (
-              // Chips are one running list, so they sit closer than two messages would.
+            {(isAnswering || toolActivity.length > 0) && (
+              // One waiting block: chips are a running list above the dots, and the dots
+              // stay put as tools come and go rather than swapping in and out of the feed.
               <div className="flex flex-col items-start gap-2">
                 {toolActivity.map((name, index) => (
                   <ToolChip key={name} name={name} index={index} />
                 ))}
+
+                {isAnswering && <ThinkingDots />}
               </div>
             )}
-
-            {isAnswering && toolActivity.length === 0 && <ThinkingDots />}
 
             {status === StreamStatus.Error && (
               <div role="alert" className="animate-message-in text-sm text-watch">

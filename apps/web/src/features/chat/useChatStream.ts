@@ -22,6 +22,9 @@ const IDLE_TIMEOUT_MS = 30_000
 
 const STALLED = 'The assistant stopped mid-answer.'
 
+/** A tool that answers instantly would flash its chip; it stays up long enough to read. */
+const MIN_TOOL_VISIBLE_MS = 500
+
 const CONNECTION_LOST = 'Lost the connection to the assistant.'
 
 type SseFrame = { event: string; data: unknown }
@@ -56,10 +59,19 @@ export function useChatStream() {
 
   const controllerRef = useRef<AbortController | null>(null)
 
+  // Chips waiting out their minimum, so an abandoned turn does not leave one behind.
+  const hideTimersRef = useRef(new Set<ReturnType<typeof setTimeout>>())
+
+  const clearHideTimers = useCallback(() => {
+    for (const timer of hideTimersRef.current) clearTimeout(timer)
+    hideTimersRef.current.clear()
+  }, [])
+
   const abort = useCallback(() => {
+    clearHideTimers()
     controllerRef.current?.abort()
     controllerRef.current = null
-  }, [])
+  }, [clearHideTimers])
 
   const send = useCallback(
     async (conversationId: string, message: string, view?: ChatView) => {
@@ -83,21 +95,34 @@ export function useChatStream() {
         idleTimer = armIdleTimer()
       }
 
+      // When each chip went up, so a fast tool can be held rather than blinked away.
+      const shownAt = new Map<string, number>()
+
+      const hideTool = (name: string) => {
+        const elapsed = Date.now() - (shownAt.get(name) ?? 0)
+        const timer = setTimeout(
+          () => {
+            hideTimersRef.current.delete(timer)
+            dispatch(setToolActivity({ name, status: ToolActivityStatus.Done }))
+          },
+          Math.max(0, MIN_TOOL_VISIBLE_MS - elapsed),
+        )
+
+        hideTimersRef.current.add(timer)
+      }
+
       const handleFrame = ({ event, data }: SseFrame) => {
         const payload = data as { text?: string; name?: string; status?: string; message?: string }
 
         if (event === 'delta') {
           dispatch(appendDelta(payload.text ?? ''))
         } else if (event === 'tool' && payload.name) {
-          dispatch(
-            setToolActivity({
-              name: payload.name,
-              status:
-                payload.status === ToolActivityStatus.Done
-                  ? ToolActivityStatus.Done
-                  : ToolActivityStatus.Running,
-            }),
-          )
+          if (payload.status === ToolActivityStatus.Done) {
+            hideTool(payload.name)
+          } else {
+            shownAt.set(payload.name, Date.now())
+            dispatch(setToolActivity({ name: payload.name, status: ToolActivityStatus.Running }))
+          }
         } else if (event === 'done') {
           // The finished message is now in the transcript; re-read it from there
           // rather than keeping a second copy in the streaming buffer.
@@ -113,6 +138,7 @@ export function useChatStream() {
         }
       }
 
+      clearHideTimers()
       dispatch(startStream({ conversationId, message }))
 
       try {
@@ -164,7 +190,7 @@ export function useChatStream() {
         controllerRef.current = null
       }
     },
-    [abort, dispatch],
+    [abort, clearHideTimers, dispatch],
   )
 
   return { send, abort }
