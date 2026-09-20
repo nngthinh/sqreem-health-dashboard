@@ -6,6 +6,7 @@ import { computeReadiness } from './readiness.js'
 import { buildRecommendations, detectSignals } from './signals.js'
 import { computeTrend, splitMovers } from './trends.js'
 
+export * from './breakdown.js'
 export * from './coverage.js'
 export * from './digest.js'
 export * from './goals.js'
