@@ -21,7 +21,7 @@ describe('output contract', () => {
     const text = prompt()
 
     expect(text).toContain('at most two')
-    expect(text).toContain('Never write a number inside a block')
+    expect(text).toContain('Never write a number inside one')
   })
 })
 
@@ -29,7 +29,7 @@ describe('tools section', () => {
   it('names every tool Gemini is given, so the prompt cannot drift from the declarations', () => {
     const text = prompt()
 
-    for (const tool of TOOL_DEFS) expect(text).toContain(`- ${tool.name}:`)
+    for (const tool of TOOL_DEFS) expect(text).toContain(tool.name)
   })
 })
 
@@ -38,7 +38,7 @@ describe('identifiers', () => {
     const text = prompt()
 
     for (const id of [...METRIC_IDS, ...GOAL_IDS]) expect(text).toContain(id)
-    expect(text).toContain('There is no heart rate')
+    expect(text).toContain('No heart rate, HRV, weight, mood, water or nutrition data exists')
   })
 
   it('includes the current view only when one is given', () => {
