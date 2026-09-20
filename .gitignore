@@ -46,3 +46,5 @@ Thumbs.db
 
 # A symlinked node_modules (git worktrees) is a file, not a directory
 node_modules
+.vercel
+.env*
