@@ -177,9 +177,14 @@ export function ChatSurface({ conversationId }: { conversationId: string | null 
               <MessageBubble role={MessageRole.Assistant} content={streamingMessage} />
             )}
 
-            {toolActivity.map((name) => (
-              <ToolChip key={name} name={name} />
-            ))}
+            {toolActivity.length > 0 && (
+              // Chips are one running list, so they sit closer than two messages would.
+              <div className="flex flex-col items-start gap-2">
+                {toolActivity.map((name, index) => (
+                  <ToolChip key={name} name={name} index={index} />
+                ))}
+              </div>
+            )}
 
             {isAnswering && toolActivity.length === 0 && <ThinkingDots />}
 

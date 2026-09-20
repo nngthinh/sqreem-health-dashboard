@@ -14,7 +14,8 @@
   --radius-card: 14px;
 
   /* A message lands rather than appearing, so a new turn reads as new. */
-  --animate-message-in: message-in 220ms ease-out;
+  /* `both` so a delayed entrance holds its opening frame instead of flashing first. */
+  --animate-message-in: message-in 220ms ease-out both;
 
   /* Three dots breathing in turn: a wait with a pulse reads as working, not stuck. */
   --animate-thinking: thinking 1.2s ease-in-out infinite;
