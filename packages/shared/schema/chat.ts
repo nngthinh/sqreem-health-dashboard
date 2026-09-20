@@ -31,7 +31,17 @@ export const MessageRoleSchema = z.enum(MessageRole)
  * Exchanges are kept for the life of the conversation — the stamp is what lets an old
  * one read as history rather than being mistaken for today's numbers.
  */
-export type ToolExchange = { name: string; args: unknown; response: unknown; asOf: string }
+export type ToolExchange = {
+  name: string
+  args: unknown
+  response: unknown
+  asOf: string
+  /**
+   * The opaque thought signature a reasoning model issues with a call. It has to travel
+   * back with the call on the next request, so it is stored beside the exchange.
+   */
+  signature?: string
+}
 
 export type ChatMessage = {
   id: string

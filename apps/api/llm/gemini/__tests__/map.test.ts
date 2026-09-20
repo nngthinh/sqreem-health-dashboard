@@ -45,6 +45,55 @@ describe('alternation rules', () => {
   })
 })
 
+describe('thought signatures', () => {
+  const signed = {
+    name: 'get_metric_series',
+    args: { metricId: 'steps' },
+    response: { ok: true },
+    asOf: AS_OF,
+    signature: 'sig-1',
+  }
+  const unsigned = {
+    name: 'get_recent_workouts',
+    args: {},
+    response: { ok: true },
+    asOf: AS_OF,
+  }
+
+  it('replays a call with the signature it was issued with', () => {
+    const out = toGeminiContents([user('steps?'), assistant('Checking.', [signed])])
+
+    expect(out[1]?.parts).toContainEqual({
+      functionCall: { name: 'get_metric_series', args: { metricId: 'steps' } },
+      thoughtSignature: 'sig-1',
+    })
+  })
+
+  it('drops an unsigned call once the conversation shows signatures', () => {
+    const out = toGeminiContents([
+      user('workouts?'),
+      assistant('An older answer.', [unsigned]),
+      user('steps?'),
+      assistant('Checking.', [signed]),
+    ])
+
+    const calls = out.flatMap((content) => content.parts).filter((part) => 'functionCall' in part)
+
+    expect(calls).toHaveLength(1)
+    // The prose of the older turn still replays; only its tool traffic is dropped.
+    expect(out.flatMap((content) => content.parts)).toContainEqual({ text: 'An older answer.' })
+  })
+
+  it('keeps unsigned calls when nothing in the conversation is signed', () => {
+    const out = toGeminiContents([user('workouts?'), assistant('Checking.', [unsigned])])
+
+    expect(out[1]?.parts).toContainEqual({
+      functionCall: { name: 'get_recent_workouts', args: {} },
+    })
+    expect(out[2]?.parts).toHaveLength(1)
+  })
+})
+
 describe('tool exchanges', () => {
   it('expands one stored assistant row into a model turn and a following user turn', () => {
     const out = toGeminiContents([
