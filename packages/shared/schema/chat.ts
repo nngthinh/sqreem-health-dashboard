@@ -1,6 +1,6 @@
 import { z } from 'zod'
-import type { InsightBlock } from './blocks'
-import { MetricIdSchema } from './ids'
+import type { InsightBlock } from './blocks.js'
+import { MetricIdSchema } from './ids.js'
 
 /** The client posts only this. Prior turns are read from the database, never accepted. */
 export const ChatRequestSchema = z.object({

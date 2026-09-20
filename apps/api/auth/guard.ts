@@ -1,8 +1,8 @@
 import { createMiddleware } from 'hono/factory'
-import type { AppBindings } from '../app'
-import { getOrCreateFixedUser } from '../db/users'
-import type { Env } from '../env'
-import { readSession, readSessionCookie } from './session'
+import type { AppBindings } from '../app.js'
+import { getOrCreateFixedUser } from '../db/users.js'
+import type { Env } from '../env.js'
+import { readSession, readSessionCookie } from './session.js'
 
 /**
  * Every path that has to answer before a session exists: the health probe and the

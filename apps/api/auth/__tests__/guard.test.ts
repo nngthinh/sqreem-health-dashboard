@@ -1,8 +1,8 @@
 import { Hono } from 'hono'
 import { describe, expect, it } from 'vitest'
-import type { AppBindings } from '../../app'
-import { parseEnv } from '../../env'
-import { authGuard } from '../guard'
+import type { AppBindings } from '../../app.js'
+import { parseEnv } from '../../env.js'
+import { authGuard } from '../guard.js'
 
 const raw = process.env as Record<string, string | undefined>
 const appWith = (env: ReturnType<typeof parseEnv>) => {

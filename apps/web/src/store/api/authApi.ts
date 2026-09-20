@@ -17,7 +17,12 @@ export const authApi = createApi({
     getMe: build.query<Me, void>({ query: () => '/me', providesTags: ['Me'] }),
     logout: build.mutation<{ ok: true }, void>({
       query: () => ({ url: '/auth/logout', method: 'POST' }),
-      invalidatesTags: ['Me'],
+      // Drop the cache rather than invalidate it: every cached response was that
+      // person's, and invalidating would leave the stale `me` readable.
+      async onQueryStarted(_arg, { dispatch, queryFulfilled }) {
+        await queryFulfilled
+        dispatch(authApi.util.resetApiState())
+      },
     }),
     devLogin: build.mutation<{ ok: true }, void>({
       query: () => ({ url: '/auth/dev', method: 'POST' }),

@@ -1,8 +1,8 @@
 import { eq } from 'drizzle-orm'
 import { afterEach, describe, expect, it } from 'vitest'
-import { db } from '../client'
-import { users } from '../schema'
-import { getOrCreateFixedUser, upsertGoogleUser } from '../users'
+import { db } from '../client.js'
+import { users } from '../schema.js'
+import { getOrCreateFixedUser, upsertGoogleUser } from '../users.js'
 
 const subs: string[] = []
 const track = <T extends { googleSub: string }>(u: T) => {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { getOrCreateFixedUser } from '../../db/users'
-import { createSession, destroySession, readSession } from '../session'
+import { getOrCreateFixedUser } from '../../db/users.js'
+import { createSession, destroySession, readSession } from '../session.js'
 
 describe('session store', () => {
   it('round-trips a session and resolves it to its user', async () => {

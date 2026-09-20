@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { assertBootable, parseEnv } from '../env'
+import { assertBootable, parseEnv } from '../env.js'
 
 const base = {
   NODE_ENV: 'development',

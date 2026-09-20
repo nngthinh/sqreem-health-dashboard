@@ -48,9 +48,11 @@ const unauthorised = () =>
 const pending = () => new Promise<Response>(() => {})
 
 describe('RequireAuth', () => {
-  it('shows a neutral checking screen while the session is unknown', () => {
+  it('shows a bare spinner while the session is unknown', () => {
     renderWith(pending as unknown as typeof fetch)
-    expect(screen.getByText(/checking your session/i)).toBeInTheDocument()
+    const status = screen.getByRole('status')
+    expect(status).toBeInTheDocument()
+    expect(status).toHaveAccessibleName(/checking your session/i)
     expect(screen.queryByText('login page')).not.toBeInTheDocument()
   })
 

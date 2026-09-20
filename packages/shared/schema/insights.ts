@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import type { GoalId, MetricId, Range } from './ids'
+import type { GoalId, MetricId, Range } from './ids.js'
 
 /** Shared three-state health judgement: readiness band, goal status, signal severity. */
 export enum Band {

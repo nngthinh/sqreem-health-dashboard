@@ -1,13 +1,13 @@
 import { createHash } from 'node:crypto'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { parseEnv } from '../../env'
+import { parseEnv } from '../../env.js'
 import {
   claimsFromIdToken,
   createAuthorizationUrl,
   exchangeCodeForIdToken,
   generateCodeVerifier,
   generateState,
-} from '../google'
+} from '../google.js'
 
 const env = parseEnv({
   ...(process.env as Record<string, string | undefined>),

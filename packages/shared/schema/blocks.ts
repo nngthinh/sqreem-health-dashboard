@@ -1,7 +1,7 @@
 import { format, subDays } from 'date-fns'
 import { z } from 'zod'
-import { GoalIdSchema, MetricIdSchema, RangeSchema } from './ids'
-import { PeriodSchema } from './records'
+import { GoalIdSchema, MetricIdSchema, RangeSchema } from './ids.js'
+import { PeriodSchema } from './records.js'
 
 export enum BlockKind {
   Metric = 'metric',

@@ -1,4 +1,5 @@
 import { Navigate, Outlet, useLocation } from 'react-router'
+import { Spinner } from '../components/states/Spinner'
 import { useGetMeQuery } from '../store/api/authApi'
 
 export function RequireAuth() {
@@ -7,8 +8,8 @@ export function RequireAuth() {
 
   if (isLoading) {
     return (
-      <div className="grid min-h-dvh place-items-center text-sm text-ink-muted">
-        Checking your session…
+      <div className="grid min-h-dvh place-items-center">
+        <Spinner label="Checking your session" />
       </div>
     )
   }
