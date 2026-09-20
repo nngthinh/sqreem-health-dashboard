@@ -4,7 +4,7 @@ import { env } from '../env'
 import * as schema from './schema'
 
 /**
- * §3.6: production runs on serverless functions, where a TCP pool is a classic
+ * Production runs on serverless functions, where a TCP pool is a classic
  * mismatch — hence Neon's HTTP driver. But that driver only speaks to Neon's HTTP
  * endpoint, while local development and the repository tests run against the plain
  * Postgres in `docker-compose.yml`. So pick the driver from the host.

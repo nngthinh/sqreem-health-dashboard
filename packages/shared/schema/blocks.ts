@@ -49,8 +49,8 @@ export const InsightBlockSchema = z.discriminatedUnion('kind', [
 export type InsightBlock = z.infer<typeof InsightBlockSchema>
 
 /**
- * Freeze relative ranges to absolute dates before persisting (§3.6). The 90-day
- * window rolls with today (§2.4), so a stored `range: 30` would silently redraw
+ * Freeze relative ranges to absolute dates before persisting. The 90-day
+ * window rolls with today, so a stored `range: 30` would silently redraw
  * with numbers the user never saw.
  */
 export function normaliseBlock(block: InsightBlock, asOf: string): InsightBlock {

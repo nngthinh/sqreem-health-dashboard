@@ -22,7 +22,7 @@ const RawEnvSchema = z.object({
 export type Env = {
   isProduction: boolean
   authMode: 'sso' | 'demo'
-  /** §3.5: NODE_ENV first, then the flag. Unreadable in production by construction. */
+  /** NODE_ENV first, then the flag. Unreadable in production by construction. */
   devBypass: boolean
   devUserEmail: string
   demoAccessCode: string | null
@@ -78,7 +78,7 @@ export function parseEnv(raw: Record<string, string | undefined>): Env {
 }
 
 /**
- * §3.5: guardrails that belong to booting a server, not to reading config.
+ * Guardrails that belong to booting a server, not to reading config.
  * Kept out of `parseEnv` so the parser stays a pure total function over its input.
  */
 export function assertBootable(env: Env): void {

@@ -1,6 +1,8 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
+import { authGuard } from './auth/guard'
+import { authRoutes } from './auth/routes'
 import type { Env } from './env'
 
 export type AppBindings = { Variables: { userId: string; env: Env } }
@@ -15,6 +17,9 @@ export function createApp(env: Env): Hono<AppBindings> {
     c.set('env', env)
     await next()
   })
+
+  app.use('/api/*', authGuard(env))
+  app.route('/', authRoutes(env))
 
   app.get('/api/health', (c) =>
     c.json({ ok: true, authMode: env.authMode, devBypass: env.devBypass }),
