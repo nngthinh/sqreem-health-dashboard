@@ -48,3 +48,6 @@ Thumbs.db
 node_modules
 .vercel
 .env*
+
+# Git worktrees
+.worktrees/
