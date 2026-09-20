@@ -28,6 +28,10 @@ describe('extractInsightBlocks', () => {
     expect(dropped).toBe(1)
   })
 
+  it('drops an object that parses but is not a block', () => {
+    expect(extractInsightBlocks('```insight\n{    }\n```')).toEqual({ blocks: [], dropped: 1 })
+  })
+
   it('drops an invented metric id', () => {
     const md = '```insight\n{ "kind": "metric", "metricId": "hrv", "range": 30 }\n```'
 
@@ -75,33 +79,23 @@ describe('extractInsightBlocks', () => {
 })
 
 /**
- * A model writes a fence however it likes. Each of these is a real shape one emits, and
- * losing a block to any of them would be a silently missing chart, so they are pinned.
+ * A model writes a fence however it likes, and losing a block to any of these would be a
+ * silently missing chart. Whitespace inside the object is `JSON.parse`'s problem, not ours.
  */
-describe('extractInsightBlocks whitespace tolerance', () => {
+describe('extractInsightBlocks fence spellings', () => {
   const GOAL = '{ "kind": "goal", "goalId": "sleep" }'
-  const expected = [{ kind: BlockKind.Goal, goalId: 'sleep' }]
+  const extracted = { blocks: [{ kind: BlockKind.Goal, goalId: 'sleep' }], dropped: 0 }
 
   it.each([
-    ['padding inside the object', '```insight\n{   "kind":"goal",   "goalId":"sleep"   }\n```'],
-    ['trailing space after the tag', `\`\`\`insight \n${GOAL}\n\`\`\``],
+    ['padding inside the object', '```insight\n{  "kind":"goal",  "goalId":"sleep"  }\n```'],
+    ['a trailing space after the tag', `\`\`\`insight \n${GOAL}\n\`\`\``],
     ['blank lines around the body', `\`\`\`insight\n\n${GOAL}\n\n\`\`\``],
     ['an info string after the tag', `\`\`\`insight chart\n${GOAL}\n\`\`\``],
-    ['an indented fence inside a list item', `- here:\n  \`\`\`insight\n  ${GOAL}\n  \`\`\``],
-    ['no newline before the closing fence', `\`\`\`insight\n${GOAL}\`\`\``],
+    ['an indented fence in a list item', `- here:\n  \`\`\`insight\n  ${GOAL}\n  \`\`\``],
+    ['no newline before the close', `\`\`\`insight\n${GOAL}\`\`\``],
     ['CRLF line endings', `\`\`\`insight\r\n${GOAL}\r\n\`\`\``],
     ['four backticks', `\`\`\`\`insight\n${GOAL}\n\`\`\`\``],
   ])('extracts through %s', (_name, md) => {
-    expect(extractInsightBlocks(md).blocks).toEqual(expected)
-  })
-
-  it.each([
-    ['an empty object', '```insight\n{}\n```'],
-    ['an object of only whitespace', '```insight\n{    }\n```'],
-  ])('drops %s, which parses but is not a block', (_name, md) => {
-    const { blocks, dropped } = extractInsightBlocks(md)
-
-    expect(blocks).toEqual([])
-    expect(dropped).toBe(1)
+    expect(extractInsightBlocks(md)).toEqual(extracted)
   })
 })
