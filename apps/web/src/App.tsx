@@ -4,7 +4,6 @@ import { ChatFab } from './components/chat/ChatFab'
 import { Header } from './components/shell/Header'
 import { MobileDrawer } from './components/shell/MobileDrawer'
 import { Sidebar } from './components/shell/Sidebar'
-import { SkipLink } from './components/shell/SkipLink'
 import { useAppDispatch, useAppSelector } from './store'
 import { type Me, useGetMeQuery } from './store/api/authApi'
 import { setDrawerOpen } from './store/uiSlice'
@@ -35,8 +34,6 @@ export function App() {
 
   return (
     <div className="flex h-dvh overflow-hidden">
-      <SkipLink />
-
       <div className="hidden shrink-0 md:block">
         <Sidebar me={me} collapsed={sidebarCollapsed} />
       </div>
@@ -49,10 +46,7 @@ export function App() {
         <Header title={getPageTitle(pathname, me)} />
 
         {/* Chat owns its own gutters so its divider and composer reach the edges. */}
-        {/* `tabIndex` so the skip link lands on the region rather than merely scrolling to it. */}
         <main
-          id="main"
-          tabIndex={-1}
           className={isChat ? 'min-h-0 flex-1 overflow-hidden' : 'flex-1 overflow-y-auto px-4 py-5'}
         >
           <Outlet />

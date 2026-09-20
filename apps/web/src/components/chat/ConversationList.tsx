@@ -6,6 +6,7 @@ import {
   useListConversationsQuery,
   useRenameConversationMutation,
 } from '../../store/api/chatApi'
+import { Button } from '../common/Button'
 import { ConfirmDialog } from '../common/ConfirmDialog'
 import { ConversationMenu } from './ConversationMenu'
 import { RenameConversationDialog } from './RenameConversationDialog'
@@ -54,7 +55,6 @@ export function ConversationList({ activeId, onSelect, onNew, onDeleted }: Conve
     }
 
     closeAction()
-    notify.success('Conversation deleted')
     onDeleted(id)
   }
 
@@ -67,9 +67,9 @@ export function ConversationList({ activeId, onSelect, onNew, onDeleted }: Conve
       return (
         <p className="px-1 py-2 text-sm text-ink-muted">
           Couldn't load your chats.{' '}
-          <button type="button" onClick={handleRetry} className="underline">
+          <Button onClick={handleRetry} className="underline">
             Retry
-          </button>
+          </Button>
         </p>
       )
     }
@@ -82,8 +82,7 @@ export function ConversationList({ activeId, onSelect, onNew, onDeleted }: Conve
       <ul>
         {conversations.map((conversation) => (
           <li key={conversation.id} className="group flex items-center gap-1">
-            <button
-              type="button"
+            <Button
               onClick={() => onSelect(conversation.id)}
               className={`flex-1 truncate rounded px-2 py-2 text-left text-sm ${
                 conversation.id === activeId
@@ -92,7 +91,7 @@ export function ConversationList({ activeId, onSelect, onNew, onDeleted }: Conve
               }`}
             >
               {conversation.title}
-            </button>
+            </Button>
 
             <ConversationMenu
               title={conversation.title}
@@ -107,13 +106,12 @@ export function ConversationList({ activeId, onSelect, onNew, onDeleted }: Conve
 
   return (
     <div className="flex h-full flex-col">
-      <button
-        type="button"
+      <Button
         onClick={onNew}
         className="m-3 rounded-md border border-line px-3 py-2 text-sm hover:bg-line/40"
       >
         New chat
-      </button>
+      </Button>
 
       <div className="flex-1 overflow-y-auto px-3 pb-3">{renderList()}</div>
 

@@ -1,6 +1,7 @@
 import { RANGES, type Range } from '@health/shared/schema'
 import { useAppDispatch, useAppSelector } from '../../store'
 import { setRange } from '../../store/uiSlice'
+import { Button } from '../common/Button'
 
 export function RangeTabs() {
   const dispatch = useAppDispatch()
@@ -13,16 +14,15 @@ export function RangeTabs() {
       className="flex gap-1 rounded-md border border-line p-0.5"
     >
       {RANGES.map((r: Range) => (
-        <button
+        <Button
           key={r}
           role="tab"
           aria-selected={range === r}
-          type="button"
           onClick={() => dispatch(setRange(r))}
           className={`rounded px-2.5 py-1 text-xs ${range === r ? 'bg-line text-ink' : 'text-ink-muted'}`}
         >
           {r}d
-        </button>
+        </Button>
       ))}
     </div>
   )

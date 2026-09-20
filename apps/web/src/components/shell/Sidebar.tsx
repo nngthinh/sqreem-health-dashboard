@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router'
 import { type Me, useLogoutMutation } from '../../store/api/authApi'
+import { Button } from '../common/Button'
 
 const items = [
   { to: '/', label: 'Home', icon: '⌂' },
@@ -73,13 +74,12 @@ export function Sidebar({ me, collapsed, onNavigate }: SidebarProps) {
         </div>
 
         {!collapsed && (
-          <button
-            type="button"
+          <Button
             className="mt-2 w-full rounded-md border border-line px-2 py-1.5 text-xs text-ink-muted hover:bg-line/40 hover:text-ink"
             onClick={() => void handleSignOut()}
           >
             Sign out
-          </button>
+          </Button>
         )}
       </div>
     </nav>

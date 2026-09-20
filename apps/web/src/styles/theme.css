@@ -56,25 +56,6 @@ body {
   font-family: var(--font-sans);
 }
 
-/* Preflight makes every button `cursor: default`; anything clickable should say so. */
-button:not(:disabled),
-[role="tab"],
-[role="menuitem"],
-summary {
-  cursor: pointer;
-}
-
-/* One ring for every stop in the tab order, drawn against the dark surface. */
-:focus-visible {
-  outline: 2px solid var(--color-steady);
-  outline-offset: 2px;
-}
-
-/* The skip link's target is focusable only to receive that jump — it is not a control. */
-main:focus-visible {
-  outline: none;
-}
-
 /* Every figure on the dashboard is tabular so columns of numbers line up. */
 .figure {
   font-variant-numeric: tabular-nums;

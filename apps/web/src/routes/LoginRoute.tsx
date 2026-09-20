@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Navigate, useLocation } from 'react-router'
+import { Button } from '../components/common/Button'
 import { notify } from '../lib/notify'
 import { useDemoLoginMutation, useDevLoginMutation, useGetMeQuery } from '../store/api/authApi'
 
@@ -39,9 +40,9 @@ export function LoginRoute() {
               onChange={(e) => setCode(e.target.value)}
               className="mt-1 w-full rounded-md border border-line bg-surface px-3 py-2"
             />
-            <button type="submit" className="mt-4 w-full rounded-md bg-ink px-3 py-2 text-surface">
+            <Button type="submit" className="mt-4 w-full rounded-md bg-ink px-3 py-2 text-surface">
               Continue
-            </button>
+            </Button>
           </form>
         ) : (
           <a
@@ -54,13 +55,12 @@ export function LoginRoute() {
 
         {/* The dev bypass is shown in the UI rather than left an invisible state. */}
         {import.meta.env.DEV && (
-          <button
-            type="button"
+          <Button
             onClick={() => devLogin()}
             className="mt-3 w-full rounded-md border border-line px-3 py-2 text-sm text-ink-muted"
           >
             Continue as dev user
-          </button>
+          </Button>
         )}
       </div>
     </main>
