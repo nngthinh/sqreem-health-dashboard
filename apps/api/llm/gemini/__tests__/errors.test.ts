@@ -13,7 +13,40 @@ const overloaded = () =>
       }),
   )
 
+/** What the SDK actually throws: the gateway's body wrapped around the model's own. */
+const nestedOverloaded = () =>
+  new Error(
+    JSON.stringify({
+      error: {
+        message: JSON.stringify({
+          error: {
+            code: 503,
+            message:
+              'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.',
+            status: 'UNAVAILABLE',
+          },
+        }),
+        code: 503,
+        status: 'Service Unavailable',
+      },
+    }),
+  )
+
 describe('describeProviderError', () => {
+  it('unwraps a body nested inside another body', () => {
+    expect(describeProviderError(nestedOverloaded())).toBe(
+      'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.',
+    )
+  })
+
+  it('never passes a body through as if it were prose', () => {
+    const error = new Error(JSON.stringify({ error: { message: '{"a":1}', code: 503 } }))
+
+    expect(describeProviderError(error)).toBe(
+      'The assistant is busy right now. Please try again in a moment.',
+    )
+  })
+
   it('passes on the provider sentence for a transient failure', () => {
     expect(describeProviderError(overloaded())).toBe(
       'This model is currently experiencing high demand. Please try again later.',

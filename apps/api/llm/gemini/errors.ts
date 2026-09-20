@@ -20,9 +20,10 @@ const MAX_SENTENCE = 200
 
 type ErrorBody = { message?: unknown; code?: unknown; status?: unknown }
 
-/** The SDK stringifies the provider's JSON body into `message`, sometimes with a prefix. */
-function parseBody(error: unknown): ErrorBody | null {
-  const raw = error instanceof Error ? error.message : typeof error === 'string' ? error : ''
+/** The gateway wraps the model's body in its own, so the real sentence sits two deep. */
+const MAX_DEPTH = 4
+
+function parseJsonBody(raw: string): ErrorBody | null {
   const start = raw.indexOf('{')
   if (start === -1) return null
 
@@ -36,6 +37,29 @@ function parseBody(error: unknown): ErrorBody | null {
   } catch {
     return null
   }
+}
+
+/**
+ * The SDK stringifies the provider's JSON body into `message`, sometimes with a prefix
+ * and sometimes around another JSON body. Unwrap to the innermost one, keeping the first
+ * status seen: the outer envelope reports it, the innermost layer carries the sentence.
+ */
+function parseBody(error: unknown): ErrorBody | null {
+  const raw = error instanceof Error ? error.message : typeof error === 'string' ? error : ''
+
+  let body = parseJsonBody(raw)
+  if (!body) return null
+
+  for (let depth = 0; depth < MAX_DEPTH; depth++) {
+    if (typeof body.message !== 'string' || !body.message.includes('{')) return body
+
+    const nested = parseJsonBody(body.message)
+    if (!nested) return body
+
+    body = { ...nested, code: body.code ?? nested.code }
+  }
+
+  return body
 }
 
 function statusOf(error: unknown, body: ErrorBody | null): number | null {
@@ -56,7 +80,10 @@ export function describeProviderError(error: unknown): string {
   if (status === null || !(status in RETRYABLE)) return UNAVAILABLE
 
   const sentence = typeof body?.message === 'string' ? body.message.trim() : ''
-  const isPlainProse = sentence.length > 0 && sentence.length <= MAX_SENTENCE
+
+  // Prose, not a body that happened to be short: braces mean a layer went unread.
+  const isPlainProse =
+    sentence.length > 0 && sentence.length <= MAX_SENTENCE && !/[{}]/.test(sentence)
 
   return isPlainProse ? sentence : (RETRYABLE[status] ?? UNAVAILABLE)
 }
