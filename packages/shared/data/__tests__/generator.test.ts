@@ -1,3 +1,4 @@
+import { format } from 'date-fns'
 import { describe, expect, it } from 'vitest'
 import { generateDataset, getDatasetFor } from '../index'
 
@@ -131,7 +132,9 @@ describe('getDatasetFor', () => {
 
   it('rolls the window so it always ends today', () => {
     const { records: r } = getDatasetFor('user-a')
-    const today = new Date().toISOString().slice(0, 10)
+    // Local, not toISOString: the dataset rolls on the local date, and the two
+    // disagree for part of every day outside UTC.
+    const today = format(new Date(), 'yyyy-MM-dd')
     expect(r.at(-1)?.date).toBe(today)
   })
 })
