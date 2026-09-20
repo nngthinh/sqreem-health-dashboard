@@ -21,6 +21,13 @@
     "db:migrate": "drizzle-kit migrate --config=apps/api/drizzle.config.ts",
     "db:migrate:deploy": "if [ \"$VERCEL_ENV\" = production ]; then npm run db:migrate; else echo \"skipping migrations: VERCEL_ENV=${VERCEL_ENV:-unset}\"; fi"
   },
+  "//dependencies": "The Vercel function entry in api/ sits outside the workspaces, so its imports resolve from here rather than from @health/api. Keep these in step with apps/api/package.json.",
+  "dependencies": {
+    "@neondatabase/serverless": "^1.1.0",
+    "drizzle-orm": "^0.45.2",
+    "hono": "^4.9.0",
+    "zod": "^4.1.0"
+  },
   "devDependencies": {
     "@biomejs/biome": "^2.2.0",
     "typescript": "^5.9.0",

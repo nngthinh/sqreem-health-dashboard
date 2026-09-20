@@ -9,14 +9,24 @@ import * as schema from './schema'
  * endpoint, while local development and the repository tests run against the plain
  * Postgres in `docker-compose.yml`. So pick the driver from the host.
  */
-const isNeonHttp = /\.neon\.tech$|\.neon\.build$|pooler\.supabase\.com$/.test(
-  new URL(env.databaseUrl).hostname,
-)
+const hostname = new URL(env.databaseUrl).hostname
+const isNeonHttp = /\.neon\.tech$|\.neon\.build$|pooler\.supabase\.com$/.test(hostname)
+
+/**
+ * The fallback is the dangerous half: `pg` is a dev-only dependency, and a TCP
+ * pool per invocation is exactly what the HTTP driver exists to avoid. Left to
+ * the host pattern alone, any production URL the regex does not recognise would
+ * take it silently. So production has to match, or refuse.
+ */
+if (!isNeonHttp && env.isProduction) {
+  throw new Error(
+    `DATABASE_URL points at ${hostname}, which is not a Neon HTTP endpoint. Production runs on serverless functions and would fall back to a node-postgres pool. Refusing to start.`,
+  )
+}
 
 export const db: NeonHttpDatabase<typeof schema> = isNeonHttp
   ? drizzleHttp(neon(env.databaseUrl), { schema })
-  : // `pg` is a dev-only dependency: this branch never runs in production.
-    ((await import('drizzle-orm/node-postgres')).drizzle(env.databaseUrl, {
+  : ((await import('drizzle-orm/node-postgres')).drizzle(env.databaseUrl, {
       schema,
     }) as unknown as NeonHttpDatabase<typeof schema>)
 
