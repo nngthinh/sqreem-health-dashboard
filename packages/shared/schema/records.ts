@@ -40,6 +40,7 @@ export const PersonaSchema = z.object({
   userId: z.string(),
   name: z.string(),
   age: z.number().int().positive(),
+  gender: z.string(),
   occupation: z.string(),
   location: z.string(),
   initials: z.string().max(2),

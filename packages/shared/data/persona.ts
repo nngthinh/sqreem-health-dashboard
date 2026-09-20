@@ -1,14 +1,15 @@
 import type { Goal, Persona } from '../schema'
 
-export const MAYA: Persona = {
-  userId: 'maya-chen',
-  name: 'Maya Chen',
+export const DANIEL: Persona = {
+  userId: 'daniel-tan',
+  name: 'Daniel Tan',
   age: 34,
+  gender: 'male',
   occupation: 'Senior Product Manager',
   location: 'Singapore',
-  initials: 'MC',
+  initials: 'DT',
   narrative:
-    'Desk job, wears a fitness band. Spent the last year heads-down on a launch and let her routine slide; three months into rebuilding it and wants to know whether it is actually working.',
+    'Desk job, wears a fitness band. Spent the last year heads-down on a launch and let his routine slide; three months into rebuilding it and wants to know whether it is actually working.',
 }
 
 export const GOALS: Goal[] = [
