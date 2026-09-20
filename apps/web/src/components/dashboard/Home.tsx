@@ -3,6 +3,7 @@ import { ErrorCard } from '../states/ErrorCard'
 import { SkeletonCard } from '../states/SkeletonCard'
 import { FocusThisWeek } from './FocusThisWeek'
 import { GoalsStrip } from './GoalsStrip'
+import { RangeTabs } from './RangeTabs'
 import { RecentActivities } from './RecentActivities'
 import { TodaysRead } from './TodaysRead'
 import { WhatChanged } from './WhatChanged'
@@ -80,6 +81,10 @@ export function Home({
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-8">
+      <div className="flex justify-end">
+        <RangeTabs />
+      </div>
+
       {renderInsights()}
       {renderActivities()}
     </div>
