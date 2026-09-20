@@ -4,13 +4,14 @@ import { notify } from '../lib/notify'
 import { useDemoLoginMutation, useDevLoginMutation, useGetMeQuery } from '../store/api/authApi'
 
 export function LoginRoute() {
-  const { data: me } = useGetMeQuery()
+  const { data: me, isError } = useGetMeQuery()
   const [devLogin] = useDevLoginMutation()
   const [demoLogin] = useDemoLoginMutation()
   const [code, setCode] = useState('')
   const location = useLocation() as { state?: { from?: string } }
 
-  if (me) return <Navigate to={location.state?.from ?? '/'} replace />
+  // A 401 refetch keeps the last successful `me` cached, so `isError` decides.
+  if (me && !isError) return <Navigate to={location.state?.from ?? '/'} replace />
 
   const isDemo = import.meta.env.VITE_AUTH_HINT === 'demo'
 
