@@ -2,7 +2,7 @@ import type { DailyRecord, Insights } from '@health/shared/schema'
 import { EmptyCard } from '../states/EmptyCard'
 import { ErrorCard } from '../states/ErrorCard'
 import { SkeletonCard } from '../states/SkeletonCard'
-import { FocusThisWeek } from './FocusThisWeek'
+import { Focus } from './Focus'
 import { GoalsStrip } from './GoalsStrip'
 import { RangeTabs } from './RangeTabs'
 import { RecentActivities } from './RecentActivities'
@@ -59,7 +59,7 @@ export function Home({
       <>
         <TodaysRead insights={insights.data} />
         <WhatChanged insights={insights.data} />
-        <FocusThisWeek insights={insights.data} />
+        <Focus insights={insights.data} />
         <GoalsStrip insights={insights.data} />
 
         {insights.data.coverage.length > 0 && (

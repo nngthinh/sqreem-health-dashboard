@@ -1,4 +1,4 @@
-import { RANGE_PERIOD_LABELS, type Insights } from '@health/shared/schema'
+import { type Insights, RANGE_PERIOD_LABELS } from '@health/shared/schema'
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { EmptyCard } from '../states/EmptyCard'
