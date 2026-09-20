@@ -32,7 +32,15 @@
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^5.0.0",
+    "autoprefixer": "^10.6.1",
     "jsdom": "^29.1.1",
+    "postcss": "^8.5.28",
     "vite": "^7.1.0"
-  }
+  },
+  "browserslist": [
+    "Chrome >= 111",
+    "Safari >= 16.4",
+    "Firefox >= 128",
+    "Edge >= 111"
+  ]
 }

@@ -7,7 +7,7 @@ export function SkeletonCard({
 }) {
   return (
     <div
-      className={`animate-pulse rounded-[--radius-card] border border-line bg-surface-raised p-4 ${className}`}
+      className={`animate-pulse rounded-card border border-line bg-surface-raised p-4 ${className}`}
       aria-hidden="true"
     >
       <div className="mb-3 h-3 w-24 rounded bg-line" />

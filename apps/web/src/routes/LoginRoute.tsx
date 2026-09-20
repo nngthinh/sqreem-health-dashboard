@@ -16,7 +16,7 @@ export function LoginRoute() {
 
   return (
     <main className="grid min-h-dvh place-items-center px-4">
-      <div className="w-full max-w-sm rounded-[--radius-card] border border-line bg-surface-raised p-6">
+      <div className="w-full max-w-sm rounded-card border border-line bg-surface-raised p-6">
         <p className="mb-1 text-lg font-semibold">◈ Vitals</p>
         <p className="mb-6 text-sm text-ink-muted">Your health data, answered.</p>
 
