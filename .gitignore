@@ -43,3 +43,6 @@ pnpm-debug.log*
 # OS
 .DS_Store
 Thumbs.db
+
+# A symlinked node_modules (git worktrees) is a file, not a directory
+node_modules
