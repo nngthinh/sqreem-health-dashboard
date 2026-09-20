@@ -1,5 +1,6 @@
 import { Outlet, useLocation } from 'react-router'
 import { Toaster } from 'sonner'
+import { ChatFab } from './components/chat/ChatFab'
 import { Header } from './components/shell/Header'
 import { MobileDrawer } from './components/shell/MobileDrawer'
 import { Sidebar } from './components/shell/Sidebar'
@@ -45,6 +46,8 @@ export function App() {
           <Outlet />
         </main>
       </div>
+
+      <ChatFab />
 
       <Toaster theme="dark" position="bottom-right" />
     </div>

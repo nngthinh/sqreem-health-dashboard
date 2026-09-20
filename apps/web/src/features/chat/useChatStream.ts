@@ -1,0 +1,164 @@
+import type { ChatView } from '@health/shared/schema'
+import { useCallback, useRef } from 'react'
+import { notify } from '../../lib/notify'
+import { useAppDispatch } from '../../store'
+import { chatApi } from '../../store/api/chatApi'
+import {
+  appendDelta,
+  setToolActivity,
+  startStream,
+  streamDone,
+  streamFailed,
+} from '../../store/chatSlice'
+
+/** Abort once the server has gone quiet this long — a live stream keeps resetting it. */
+const IDLE_TIMEOUT_MS = 30_000
+
+const STALLED = 'The assistant stopped mid-answer.'
+
+type SseFrame = { event: string; data: unknown }
+
+/** One `event:`/`data:` pair. Anything else on the wire (comments, keep-alives) yields null. */
+function parseFrame(frame: string): SseFrame | null {
+  const lines = frame.split('\n')
+  const event = lines
+    .find((line) => line.startsWith('event:'))
+    ?.slice(6)
+    .trim()
+  const data = lines
+    .find((line) => line.startsWith('data:'))
+    ?.slice(5)
+    .trim()
+  if (!event || !data) return null
+
+  try {
+    return { event, data: JSON.parse(data) }
+  } catch {
+    return null
+  }
+}
+
+/**
+ * The transport for one chat turn. We deliberately do not use a chat library's own
+ * hook: those own the conversation state outside Redux, which would leave the
+ * transcript living in two places.
+ */
+export function useChatStream() {
+  const dispatch = useAppDispatch()
+
+  const controllerRef = useRef<AbortController | null>(null)
+
+  const abort = useCallback(() => {
+    controllerRef.current?.abort()
+    controllerRef.current = null
+  }, [])
+
+  const send = useCallback(
+    async (conversationId: string, message: string, view?: ChatView) => {
+      abort()
+
+      const controller = new AbortController()
+      controllerRef.current = controller
+
+      // A timed-out stream and a deliberately abandoned one both surface as an abort,
+      // so the reason is recorded here: only the first deserves an error on screen.
+      let hasTimedOut = false
+      const armIdleTimer = () =>
+        setTimeout(() => {
+          hasTimedOut = true
+          controller.abort()
+        }, IDLE_TIMEOUT_MS)
+
+      let idleTimer = armIdleTimer()
+      const keepAlive = () => {
+        clearTimeout(idleTimer)
+        idleTimer = armIdleTimer()
+      }
+
+      const handleFrame = ({ event, data }: SseFrame) => {
+        const payload = data as { text?: string; name?: string; status?: string; message?: string }
+
+        if (event === 'delta') {
+          dispatch(appendDelta(payload.text ?? ''))
+        } else if (event === 'tool' && payload.name) {
+          dispatch(
+            setToolActivity({
+              name: payload.name,
+              status: payload.status === 'done' ? 'done' : 'running',
+            }),
+          )
+        } else if (event === 'done') {
+          // The finished message is now in the transcript; re-read it from there
+          // rather than keeping a second copy in the streaming buffer.
+          dispatch(
+            chatApi.util.invalidateTags([
+              { type: 'Conversation', id: conversationId },
+              'Conversations',
+            ]),
+          )
+          dispatch(streamDone())
+        } else if (event === 'error') {
+          dispatch(streamFailed(payload.message ?? STALLED))
+          notify.error(STALLED)
+        }
+      }
+
+      dispatch(startStream(conversationId))
+
+      try {
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ conversationId, message, view }),
+          signal: controller.signal,
+        })
+
+        if (response.status === 429) {
+          notify.info('One moment, catching up.')
+          dispatch(streamFailed('One moment, catching up.'))
+          return
+        }
+
+        if (!response.ok || !response.body) throw new Error(`Chat failed with ${response.status}`)
+
+        const reader = response.body.pipeThrough(new TextDecoderStream()).getReader()
+        let buffer = ''
+
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+
+          keepAlive()
+          buffer += value
+
+          // Frames are blank-line delimited; a trailing partial frame waits for more bytes.
+          const frames = buffer.split('\n\n')
+          buffer = frames.pop() ?? ''
+
+          for (const frame of frames) {
+            const parsed = parseFrame(frame)
+            if (parsed) handleFrame(parsed)
+          }
+        }
+      } catch (error) {
+        if (hasTimedOut) {
+          dispatch(streamFailed(STALLED))
+          notify.error(STALLED)
+          return
+        }
+
+        if (controller.signal.aborted) return
+
+        dispatch(streamFailed(error instanceof Error ? error.message : 'Connection lost'))
+        notify.error('Lost the connection to the assistant.')
+      } finally {
+        clearTimeout(idleTimer)
+        controllerRef.current = null
+      }
+    },
+    [abort, dispatch],
+  )
+
+  return { send, abort }
+}

@@ -8,6 +8,12 @@ export const TONE_BG: Record<Band, string> = {
   [Band.Watch]: 'bg-watch',
 }
 
+export const TONE_BORDER: Record<Band, string> = {
+  [Band.Good]: 'border-good/40',
+  [Band.Steady]: 'border-steady/40',
+  [Band.Watch]: 'border-watch/40',
+}
+
 export const TONE_TEXT: Record<Band, string> = {
   [Band.Good]: 'text-good',
   [Band.Steady]: 'text-steady',
