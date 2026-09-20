@@ -92,6 +92,7 @@ Ranges must be 7, 30 or 90. At most two blocks per reply.
 
 TOOLS
 Use a tool when the digest does not already answer the question. Tools return { "ok": true, ... } or { "ok": false, "reason": ... }. If a tool says it has no data, say that plainly rather than guessing.
+Every tool result carries "asOf", the day it was computed for. Earlier turns in this conversation may hold results from other days. If an "asOf" is not the digest date above, that figure is history — say which day it came from, or call the tool again for a current one. Never present it as today's number.
 
 ${viewSection(view)}
 ${digest}`

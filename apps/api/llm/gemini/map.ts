@@ -1,4 +1,14 @@
+import type { ToolExchange } from '@health/shared/schema'
 import { type LlmMessage, LlmRole } from '../types.js'
+
+/**
+ * The stamp rides alongside the result rather than in a separate part, so the model
+ * cannot read a figure without also seeing the day it was computed for.
+ */
+const withAsOf = (call: ToolExchange) => ({
+  ...(call.response as Record<string, unknown>),
+  asOf: call.asOf,
+})
 
 export type GeminiPart =
   | { text: string }
@@ -41,7 +51,7 @@ export function toGeminiContents(messages: LlmMessage[]): GeminiContent[] {
       expanded.push({
         role: 'user',
         parts: paired.map((call) => ({
-          functionResponse: { name: call.name, response: call.response },
+          functionResponse: { name: call.name, response: withAsOf(call) },
         })),
       })
     }

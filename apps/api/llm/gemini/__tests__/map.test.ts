@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { type LlmMessage, LlmRole } from '../../types.js'
 import { toGeminiContents } from '../map.js'
 
+const AS_OF = '2026-09-20'
+
 const user = (content: string): LlmMessage => ({ role: LlmRole.User, content, toolCalls: [] })
 const assistant = (content: string, toolCalls: LlmMessage['toolCalls'] = []): LlmMessage => ({
   role: LlmRole.Assistant,
@@ -52,6 +54,7 @@ describe('tool exchanges', () => {
           name: 'get_goal_progress',
           args: { goalId: 'sleep' },
           response: { ok: true, met: 2, of: 7 },
+          asOf: AS_OF,
         },
       ]),
     ])
@@ -65,7 +68,12 @@ describe('tool exchanges', () => {
     expect(out[2]).toEqual({
       role: 'user',
       parts: [
-        { functionResponse: { name: 'get_goal_progress', response: { ok: true, met: 2, of: 7 } } },
+        {
+          functionResponse: {
+            name: 'get_goal_progress',
+            response: { ok: true, met: 2, of: 7, asOf: AS_OF },
+          },
+        },
       ],
     })
   })
@@ -74,8 +82,18 @@ describe('tool exchanges', () => {
     const out = toGeminiContents([
       user('compare my weeks'),
       assistant('', [
-        { name: 'compare_periods', args: { metricId: 'steps' }, response: { ok: true } },
-        { name: 'get_metric_series', args: { metricId: 'steps' }, response: { ok: true } },
+        {
+          name: 'compare_periods',
+          args: { metricId: 'steps' },
+          response: { ok: true },
+          asOf: AS_OF,
+        },
+        {
+          name: 'get_metric_series',
+          args: { metricId: 'steps' },
+          response: { ok: true },
+          asOf: AS_OF,
+        },
       ]),
     ])
 
@@ -83,10 +101,27 @@ describe('tool exchanges', () => {
     expect(out[2]?.parts).toHaveLength(2)
   })
 
+  it('stamps every result with the day it was computed, so an old exchange reads as history', () => {
+    const out = toGeminiContents([
+      user('and last month?'),
+      assistant('Checked.', [
+        { name: 'get_metric_series', args: {}, response: { ok: true }, asOf: '2026-08-01' },
+      ]),
+    ])
+
+    const part = out[2]?.parts[0]
+
+    expect(part).toEqual({
+      functionResponse: { name: 'get_metric_series', response: { ok: true, asOf: '2026-08-01' } },
+    })
+  })
+
   it('drops an orphaned call, which a turn aborted mid-tool-round can persist', () => {
     const out = toGeminiContents([
       user('hi'),
-      assistant('checking', [{ name: 'get_metric_series', args: {}, response: undefined }]),
+      assistant('checking', [
+        { name: 'get_metric_series', args: {}, response: undefined, asOf: AS_OF },
+      ]),
     ])
 
     expect(out).toHaveLength(2)
@@ -96,7 +131,7 @@ describe('tool exchanges', () => {
   it('drops an assistant row that is empty once its orphaned call is removed', () => {
     const out = toGeminiContents([
       user('hi'),
-      assistant('', [{ name: 'get_metric_series', args: {}, response: undefined }]),
+      assistant('', [{ name: 'get_metric_series', args: {}, response: undefined, asOf: AS_OF }]),
     ])
 
     expect(out).toHaveLength(1)
