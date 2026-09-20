@@ -1,5 +1,4 @@
 import { timingSafeEqual } from 'node:crypto'
-import { generateCodeVerifier, generateState } from 'arctic'
 import { eq } from 'drizzle-orm'
 import { Hono } from 'hono'
 import { deleteCookie, getCookie, setCookie } from 'hono/cookie'
@@ -8,7 +7,13 @@ import { db } from '../db/client'
 import { users } from '../db/schema'
 import { getOrCreateFixedUser, upsertGoogleUser } from '../db/users'
 import type { Env } from '../env'
-import { claimsFromIdToken, googleClient } from './google'
+import {
+  claimsFromIdToken,
+  createAuthorizationUrl,
+  exchangeCodeForIdToken,
+  generateCodeVerifier,
+  generateState,
+} from './google'
 import { DEMO_SUB, DEV_SUB } from './guard'
 import {
   clearSessionCookie,
@@ -54,12 +59,7 @@ export function authRoutes(env: Env) {
     } as const
     setCookie(c, 'g_state', state, opts)
     setCookie(c, 'g_verifier', verifier, opts)
-    const url = googleClient(env).createAuthorizationURL(state, verifier, [
-      'openid',
-      'email',
-      'profile',
-    ])
-    return c.redirect(url.toString())
+    return c.redirect(createAuthorizationUrl(env, state, verifier))
   })
 
   app.get('/api/auth/callback', async (c) => {
@@ -75,9 +75,7 @@ export function authRoutes(env: Env) {
       return c.redirect('/login?error=oauth_state')
     }
 
-    const tokens = await googleClient(env).validateAuthorizationCode(code, verifier)
-    const claims = claimsFromIdToken(tokens.idToken())
-    // Access and refresh tokens are deliberately discarded here (§3.5) — we never call Google again.
+    const claims = claimsFromIdToken(await exchangeCodeForIdToken(env, code, verifier))
     const user = await upsertGoogleUser({
       googleSub: claims.sub,
       email: claims.email,
