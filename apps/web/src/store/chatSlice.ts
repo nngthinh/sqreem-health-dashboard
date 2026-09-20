@@ -1,8 +1,17 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
 
-type StreamStatus = 'idle' | 'streaming' | 'error'
+export enum StreamStatus {
+  Idle = 'idle',
+  Streaming = 'streaming',
+  Error = 'error',
+}
 
-type ToolActivity = { name: string; status: 'running' | 'done' }
+export enum ToolActivityStatus {
+  Running = 'running',
+  Done = 'done',
+}
+
+type ToolActivity = { name: string; status: ToolActivityStatus }
 
 /**
  * Only what is genuinely client-side and ephemeral. The persisted transcript is
@@ -19,7 +28,7 @@ type ChatState = {
 const initialState: ChatState = {
   activeConversationId: null,
   streamingMessage: '',
-  status: 'idle',
+  status: StreamStatus.Idle,
   toolActivity: [],
   error: null,
 }
@@ -35,7 +44,7 @@ const chatSlice = createSlice({
     startStream(state, action: PayloadAction<string>) {
       state.activeConversationId = action.payload
       state.streamingMessage = ''
-      state.status = 'streaming'
+      state.status = StreamStatus.Streaming
       state.toolActivity = []
       state.error = null
     },
@@ -48,13 +57,13 @@ const chatSlice = createSlice({
       const { name, status } = action.payload
 
       state.toolActivity =
-        status === 'running'
+        status === ToolActivityStatus.Running
           ? [...state.toolActivity, name]
           : state.toolActivity.filter((running) => running !== name)
     },
 
     streamFailed(state, action: PayloadAction<string>) {
-      state.status = 'error'
+      state.status = StreamStatus.Error
       state.error = action.payload
       state.toolActivity = []
       // streamingMessage is deliberately preserved: a failed stream leaves the
@@ -62,7 +71,7 @@ const chatSlice = createSlice({
     },
 
     streamDone(state) {
-      state.status = 'idle'
+      state.status = StreamStatus.Idle
       state.streamingMessage = ''
       state.toolActivity = []
       state.error = null

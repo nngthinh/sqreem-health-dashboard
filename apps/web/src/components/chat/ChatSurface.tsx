@@ -4,7 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router'
 import { useChatStream } from '../../features/chat/useChatStream'
 import { useAppDispatch, useAppSelector } from '../../store'
 import { useCreateConversationMutation, useGetConversationQuery } from '../../store/api/chatApi'
-import { setActiveConversation } from '../../store/chatSlice'
+import { StreamStatus, setActiveConversation } from '../../store/chatSlice'
 import { ErrorCard } from '../states/ErrorCard'
 import { SkeletonCard } from '../states/SkeletonCard'
 import { Composer } from './Composer'
@@ -150,7 +150,7 @@ export function ChatSurface({ conversationId }: { conversationId: string | null 
             <ToolChip key={name} name={name} />
           ))}
 
-          {status === 'error' && (
+          {status === StreamStatus.Error && (
             <div role="alert" className="text-sm text-watch">
               {error ?? 'The assistant stopped mid-answer.'}{' '}
               <button type="button" className="underline" onClick={handleRetry}>
@@ -163,7 +163,7 @@ export function ChatSurface({ conversationId }: { conversationId: string | null 
         {/* Remounted when the seeded question changes, so a new ask replaces the draft. */}
         <Composer
           key={prefill}
-          disabled={status === 'streaming'}
+          disabled={status === StreamStatus.Streaming}
           initialValue={prefill}
           onSend={(message) => void handleSubmit(message)}
         />

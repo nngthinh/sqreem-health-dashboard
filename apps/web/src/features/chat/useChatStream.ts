@@ -9,6 +9,7 @@ import {
   startStream,
   streamDone,
   streamFailed,
+  ToolActivityStatus,
 } from '../../store/chatSlice'
 
 /** Abort once the server has gone quiet this long — a live stream keeps resetting it. */
@@ -84,7 +85,10 @@ export function useChatStream() {
           dispatch(
             setToolActivity({
               name: payload.name,
-              status: payload.status === 'done' ? 'done' : 'running',
+              status:
+                payload.status === ToolActivityStatus.Done
+                  ? ToolActivityStatus.Done
+                  : ToolActivityStatus.Running,
             }),
           )
         } else if (event === 'done') {
