@@ -25,7 +25,7 @@ export type LlmMessage = {
 
 export type LlmEvent =
   | { type: LlmEventType.Text; text: string }
-  | { type: LlmEventType.ToolCall; id: string; name: string; args: unknown }
+  | { type: LlmEventType.ToolCall; id: string; name: string; args: unknown; signature?: string }
   | { type: LlmEventType.Done; usage: { inputTokens: number; outputTokens: number } }
   | { type: LlmEventType.Error; message: string }
 

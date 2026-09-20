@@ -4,7 +4,7 @@ import { type Me, useLogoutMutation } from '../../store/api/authApi'
 
 const items = [
   { to: '/', label: 'Home', icon: '⌂' },
-  { to: '/chat', label: 'Chats', icon: '✦' },
+  { to: '/chats', label: 'Chats', icon: '✦' },
 ]
 
 export function Sidebar({ me, collapsed }: { me: Me | undefined; collapsed: boolean }) {

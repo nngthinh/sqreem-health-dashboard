@@ -7,6 +7,7 @@ import {
   type LlmRequest,
   type ToolDef,
 } from '../types.js'
+import { describeProviderError } from './errors.js'
 import { toGeminiContents } from './map.js'
 
 /**
@@ -50,14 +51,22 @@ export function createGeminiProvider(env: Env): LlmProvider {
         let callIndex = 0
 
         for await (const chunk of response) {
-          if (chunk.text) yield { type: LlmEventType.Text, text: chunk.text }
+          // Parts are read one by one rather than through the chunk's text and
+          // functionCalls shortcuts: a reasoning model signs each call in the part that
+          // holds it, and that signature has to come back with the call next round.
+          for (const part of chunk.candidates?.[0]?.content?.parts ?? []) {
+            if (part.thought) continue
 
-          for (const call of chunk.functionCalls ?? []) {
-            yield {
-              type: LlmEventType.ToolCall,
-              id: call.id ?? `call_${callIndex++}`,
-              name: call.name ?? '',
-              args: call.args ?? {},
+            if (part.text) yield { type: LlmEventType.Text, text: part.text }
+
+            if (part.functionCall) {
+              yield {
+                type: LlmEventType.ToolCall,
+                id: part.functionCall.id ?? `call_${callIndex++}`,
+                name: part.functionCall.name ?? '',
+                args: part.functionCall.args ?? {},
+                ...(part.thoughtSignature ? { signature: part.thoughtSignature } : {}),
+              }
             }
           }
 
@@ -70,10 +79,12 @@ export function createGeminiProvider(env: Env): LlmProvider {
 
         yield { type: LlmEventType.Done, usage: { inputTokens, outputTokens } }
       } catch (error) {
-        yield {
-          type: LlmEventType.Error,
-          message: error instanceof Error ? error.message : 'LLM request failed',
-        }
+        // The SDK puts the provider's whole error body in `message`: a wall of JSON if
+        // it travels on unchanged. Log it whole, hand back the one sentence of it the
+        // user can act on.
+        console.error('[llm] request failed', error)
+
+        yield { type: LlmEventType.Error, message: describeProviderError(error) }
       }
     },
   }

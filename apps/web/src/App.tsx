@@ -1,5 +1,6 @@
 import { Outlet, useLocation } from 'react-router'
 import { Toaster } from 'sonner'
+import { ChatFab } from './components/chat/ChatFab'
 import { Header } from './components/shell/Header'
 import { MobileDrawer } from './components/shell/MobileDrawer'
 import { Sidebar } from './components/shell/Sidebar'
@@ -16,7 +17,7 @@ function getGreeting(me: Me | undefined) {
 
 /** Each route gets its own copy in the header's title slot. */
 function getPageTitle(pathname: string, me: Me | undefined) {
-  if (pathname.startsWith('/chat')) return 'Chat history'
+  if (pathname.startsWith('/chats')) return 'Chat history'
   if (pathname.startsWith('/metric')) return 'Metric detail'
 
   return getGreeting(me)
@@ -24,6 +25,8 @@ function getPageTitle(pathname: string, me: Me | undefined) {
 
 export function App() {
   const { pathname } = useLocation()
+
+  const isChat = pathname.startsWith('/chats')
 
   const { data: me } = useGetMeQuery()
   const dispatch = useAppDispatch()
@@ -41,10 +44,16 @@ export function App() {
 
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <Header title={getPageTitle(pathname, me)} />
-        <main className="flex-1 overflow-y-auto px-4 py-5">
+
+        {/* Chat owns its own gutters so its divider and composer reach the edges. */}
+        <main
+          className={isChat ? 'min-h-0 flex-1 overflow-hidden' : 'flex-1 overflow-y-auto px-4 py-5'}
+        >
           <Outlet />
         </main>
       </div>
+
+      <ChatFab />
 
       <Toaster theme="dark" position="bottom-right" />
     </div>

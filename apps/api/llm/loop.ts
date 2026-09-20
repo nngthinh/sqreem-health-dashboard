@@ -52,7 +52,7 @@ export async function* runToolLoop(options: ToolLoopOptions): AsyncIterable<Loop
   let usage: TokenUsage = { inputTokens: 0, outputTokens: 0 }
 
   for (let round = 0; round <= MAX_TOOL_ROUNDS; round++) {
-    const pending: { name: string; args: unknown }[] = []
+    const pending: { name: string; args: unknown; signature?: string }[] = []
     let roundText = ''
     let failure: string | null = null
 
@@ -62,7 +62,11 @@ export async function* runToolLoop(options: ToolLoopOptions): AsyncIterable<Loop
         content += event.text
         yield { type: LoopEventType.Delta, text: event.text }
       } else if (event.type === LlmEventType.ToolCall) {
-        pending.push({ name: event.name, args: event.args })
+        pending.push({
+          name: event.name,
+          args: event.args,
+          ...(event.signature ? { signature: event.signature } : {}),
+        })
         yield { type: LoopEventType.Tool, name: event.name, status: ToolStatus.Running }
       } else if (event.type === LlmEventType.Done) {
         usage = {
@@ -88,7 +92,13 @@ export async function* runToolLoop(options: ToolLoopOptions): AsyncIterable<Loop
     const roundExchanges: ToolExchange[] = []
     for (const call of pending) {
       const response = await runTool(userId, call.name, call.args, today)
-      roundExchanges.push({ name: call.name, args: call.args, response, asOf: today })
+      roundExchanges.push({
+        name: call.name,
+        args: call.args,
+        response,
+        asOf: today,
+        ...(call.signature ? { signature: call.signature } : {}),
+      })
       yield { type: LoopEventType.Tool, name: call.name, status: ToolStatus.Done }
     }
     toolCalls.push(...roundExchanges)

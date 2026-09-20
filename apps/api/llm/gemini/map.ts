@@ -12,8 +12,23 @@ const withAsOf = (call: ToolExchange) => ({
 
 export type GeminiPart =
   | { text: string }
-  | { functionCall: { name: string; args: unknown } }
+  | { functionCall: { name: string; args: unknown }; thoughtSignature?: string }
   | { functionResponse: { name: string; response: unknown } }
+
+/**
+ * A reasoning model rejects one of its own calls replayed without the thought signature
+ * it issued: the call reads as fabricated. Rows stored before signatures were carried
+ * have none, so once any call in the conversation carries one, the unsigned calls are
+ * stale and their pairs are dropped — the prose of those turns still replays. A model
+ * that never signs keeps everything, which is what makes this safe for both.
+ */
+const signsCalls = (messages: LlmMessage[]) =>
+  messages.some((message) => message.toolCalls.some((call) => call.signature))
+
+const toModelPart = (call: ToolExchange): GeminiPart => ({
+  functionCall: { name: call.name, args: call.args },
+  ...(call.signature ? { thoughtSignature: call.signature } : {}),
+})
 
 export type GeminiContent = { role: 'user' | 'model'; parts: GeminiPart[] }
 
@@ -26,6 +41,7 @@ export type GeminiContent = { role: 'user' | 'model'; parts: GeminiPart[] }
  */
 export function toGeminiContents(messages: LlmMessage[]): GeminiContent[] {
   const expanded: GeminiContent[] = []
+  const requiresSignature = signsCalls(messages)
 
   for (const message of messages) {
     if (message.role === LlmRole.User) {
@@ -37,12 +53,13 @@ export function toGeminiContents(messages: LlmMessage[]): GeminiContent[] {
 
     // A turn aborted mid-tool-round can persist a call with no response;
     // sending it unmatched is a 400, so drop it.
-    const paired = message.toolCalls.filter((call) => call.response !== undefined)
+    const paired = message.toolCalls.filter(
+      (call) => call.response !== undefined && (!requiresSignature || Boolean(call.signature)),
+    )
 
     const modelParts: GeminiPart[] = []
     if (message.content.length > 0) modelParts.push({ text: message.content })
-    for (const call of paired)
-      modelParts.push({ functionCall: { name: call.name, args: call.args } })
+    for (const call of paired) modelParts.push(toModelPart(call))
     if (modelParts.length === 0) continue
 
     expanded.push({ role: 'model', parts: modelParts })
