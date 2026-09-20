@@ -1,4 +1,4 @@
-import { createBrowserRouter } from 'react-router'
+import { createBrowserRouter, Navigate } from 'react-router'
 import { App } from './App'
 import { ChatRoute } from './routes/ChatRoute'
 import { HomeRoute } from './routes/HomeRoute'
@@ -15,9 +15,11 @@ export const router = createBrowserRouter([
         element: <App />,
         children: [
           { path: '/', element: <HomeRoute /> },
-          { path: '/chat', element: <ChatRoute /> },
-          { path: '/chat/:conversationId', element: <ChatRoute /> },
+          { path: '/chats', element: <ChatRoute /> },
+          { path: '/chats/:conversationId', element: <ChatRoute /> },
           { path: '/metric/:metricId', element: <MetricRoute /> },
+          // An unknown path is a typo or a stale link, not an error worth a page.
+          { path: '*', element: <Navigate to="/" replace /> },
         ],
       },
     ],

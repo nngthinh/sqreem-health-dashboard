@@ -3,10 +3,18 @@ import type { InsightBlock } from './blocks.js'
 import { MetricIdSchema } from './ids.js'
 
 /** The client posts only this. Prior turns are read from the database, never accepted. */
+export const ChatViewSchema = z.object({
+  route: z.string().max(80),
+  metricId: MetricIdSchema.optional(),
+})
+
+/** What the user is looking at as they ask, so "this" in a question has a referent. */
+export type ChatView = z.infer<typeof ChatViewSchema>
+
 export const ChatRequestSchema = z.object({
   conversationId: z.string().uuid(),
   message: z.string().min(1).max(2000),
-  view: z.object({ route: z.string().max(80), metricId: MetricIdSchema.optional() }).optional(),
+  view: ChatViewSchema.optional(),
 })
 export type ChatRequest = z.infer<typeof ChatRequestSchema>
 
@@ -17,7 +25,23 @@ export enum MessageRole {
 
 export const MessageRoleSchema = z.enum(MessageRole)
 
-export type ToolExchange = { name: string; args: unknown; response: unknown }
+/**
+ * `asOf` is the day the tool was run against, not a wall-clock instant: health data has
+ * daily granularity, so the day is what decides whether a figure is still current.
+ * Exchanges are kept for the life of the conversation — the stamp is what lets an old
+ * one read as history rather than being mistaken for today's numbers.
+ */
+export type ToolExchange = {
+  name: string
+  args: unknown
+  response: unknown
+  asOf: string
+  /**
+   * The opaque thought signature a reasoning model issues with a call. It has to travel
+   * back with the call on the next request, so it is stored beside the exchange.
+   */
+  signature?: string
+}
 
 export type ChatMessage = {
   id: string

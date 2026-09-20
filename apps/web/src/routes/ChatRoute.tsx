@@ -1,3 +1,9 @@
+import { useParams } from 'react-router'
+import { ChatSurface } from '../components/chat/ChatSurface'
+
+/** The route owns only the conversation id; everything visual lives in ChatSurface. */
 export function ChatRoute() {
-  return <p className="text-ink-muted">Chat lands in Task 15.</p>
+  const { conversationId } = useParams()
+
+  return <ChatSurface conversationId={conversationId ?? null} />
 }

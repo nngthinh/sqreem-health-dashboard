@@ -1,0 +1,98 @@
+import { type Content, GoogleGenAI } from '@google/genai'
+import type { Env } from '../../env.js'
+import {
+  type LlmEvent,
+  LlmEventType,
+  type LlmProvider,
+  type LlmRequest,
+  type ToolDef,
+} from '../types.js'
+import { describeProviderError } from './errors.js'
+import { toGeminiContents } from './map.js'
+
+/**
+ * `parametersJsonSchema` rather than `parameters`: our tool definitions are plain JSON
+ * Schema, which is the field that accepts them without a hand-written SDK Schema object.
+ */
+const toFunctionDeclarations = (tools: ToolDef[]) =>
+  tools.map((tool) => ({
+    name: tool.name,
+    description: tool.description,
+    parametersJsonSchema: tool.parameters,
+  }))
+
+export function createGeminiProvider(env: Env): LlmProvider {
+  const client = new GoogleGenAI({ apiKey: env.llm.apiKey })
+
+  return {
+    async *stream(request: LlmRequest, signal?: AbortSignal): AsyncIterable<LlmEvent> {
+      // map.ts is the single owner of Gemini's message shape, and is unit-tested against
+      // its rules; the cast is the one place that shape meets the SDK's own types.
+      const contents = toGeminiContents(request.messages) as Content[]
+
+      if (contents.length === 0) {
+        yield { type: LlmEventType.Error, message: 'No user turn to respond to.' }
+        return
+      }
+
+      try {
+        const response = await client.models.generateContentStream({
+          model: env.llm.model,
+          contents,
+          config: {
+            systemInstruction: request.system, // a top-level field, never a turn
+            tools: [{ functionDeclarations: toFunctionDeclarations(request.tools) }],
+            ...(signal ? { abortSignal: signal } : {}),
+          },
+        })
+
+        let inputTokens = 0
+        let outputTokens = 0
+        let callIndex = 0
+
+        for await (const chunk of response) {
+          // Parts are read one by one rather than through the chunk's text and
+          // functionCalls shortcuts: a reasoning model signs each call in the part that
+          // holds it, and that signature has to come back with the call next round.
+          for (const part of chunk.candidates?.[0]?.content?.parts ?? []) {
+            if (part.thought) continue
+
+            if (part.text) yield { type: LlmEventType.Text, text: part.text }
+
+            if (part.functionCall) {
+              yield {
+                type: LlmEventType.ToolCall,
+                id: part.functionCall.id ?? `call_${callIndex++}`,
+                name: part.functionCall.name ?? '',
+                args: part.functionCall.args ?? {},
+                ...(part.thoughtSignature ? { signature: part.thoughtSignature } : {}),
+              }
+            }
+          }
+
+          const usage = chunk.usageMetadata
+          if (usage) {
+            inputTokens = usage.promptTokenCount ?? inputTokens
+            outputTokens = usage.candidatesTokenCount ?? outputTokens
+          }
+        }
+
+        yield { type: LlmEventType.Done, usage: { inputTokens, outputTokens } }
+      } catch (error) {
+        // The SDK puts the provider's whole error body in `message`: a wall of JSON if
+        // it travels on unchanged. Log it whole, hand back the one sentence of it the
+        // user can act on.
+        console.error('[llm] request failed', error)
+
+        yield { type: LlmEventType.Error, message: describeProviderError(error) }
+      }
+    },
+  }
+}
+
+export function createProvider(env: Env): LlmProvider {
+  if (env.llm.provider === 'google') return createGeminiProvider(env)
+
+  // The adapter is the point: adding Anthropic or OpenAI is one new file, not a refactor.
+  throw new Error(`LLM_PROVIDER=${env.llm.provider} is not implemented in this build`)
+}
