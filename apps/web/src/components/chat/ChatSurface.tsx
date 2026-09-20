@@ -14,7 +14,7 @@ import { Composer } from './Composer'
 import { ConversationList } from './ConversationList'
 import { MessageBubble } from './MessageBubble'
 import { ThinkingDots } from './ThinkingDots'
-import { ToolChip } from './ToolChip'
+import { ToolLabel } from './ToolLabel'
 
 const METRIC_ROUTE = /^\/metric\/([a-z]+)$/
 
@@ -100,6 +100,11 @@ export function ChatSurface({ conversationId }: { conversationId: string | null 
   const isPendingStored = askedAt !== null && messageCount > askedAt.messageCount
 
   const isAnswering = status === StreamStatus.Streaming && streamingMessage.length === 0
+
+  // Tools can run two at a time, but the row has one wait to explain: the oldest still
+  // running names it, and the rest finish quietly behind it.
+  const runningTool = toolActivity[0]
+
   const isThreadLoading = Boolean(conversationId) && thread.isFetching && !thread.currentData
 
   // A live question is not in the transcript yet, so it is its own anchor; otherwise the
@@ -263,15 +268,13 @@ export function ChatSurface({ conversationId }: { conversationId: string | null 
             <MessageBubble role={MessageRole.Assistant} content={streamingMessage} />
           )}
 
-          {(isAnswering || toolActivity.length > 0) && (
-            // One waiting row: the dots hold the left, and the chips run to their right
-            // as tools come and go, rather than swapping in and out of the feed.
-            <div className="flex flex-wrap items-center gap-2">
+          {(isAnswering || runningTool) && (
+            // One waiting row: the dots hold the left and the label sits beside them,
+            // rather than either swapping in and out of the feed.
+            <div className="flex items-center gap-2">
               {isAnswering && <ThinkingDots />}
 
-              {toolActivity.map((name, index) => (
-                <ToolChip key={name} name={name} index={index} />
-              ))}
+              {runningTool && <ToolLabel name={runningTool} />}
             </div>
           )}
 
