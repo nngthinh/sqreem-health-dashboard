@@ -1,0 +1,15 @@
+{
+  "name": "@health/shared",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./schema": "./schema/index.ts",
+    "./data": "./data/index.ts",
+    "./insights": "./insights/index.ts"
+  },
+  "dependencies": {
+    "zod": "^4.1.0",
+    "date-fns": "^4.1.0"
+  }
+}
