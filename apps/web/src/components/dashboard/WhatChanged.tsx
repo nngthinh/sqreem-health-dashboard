@@ -5,6 +5,9 @@ import { formatDelta, formatMetric } from '../../lib/format'
 import { TONE_TEXT } from '../../lib/tone'
 import { Sparkline } from '../charts/Sparkline'
 
+/** Label + figure + delta + sparkline, so every card and the empty state line up. */
+const MOVER_CARD_HEIGHT = 'min-h-[156px]'
+
 export function WhatChanged({ insights }: { insights: Insights }) {
   const movers = insights.movers.flatMap((metricId) => {
     const trend = insights.trends.find((candidate) => candidate.metricId === metricId)
@@ -14,9 +17,11 @@ export function WhatChanged({ insights }: { insights: Insights }) {
   const renderMovers = () => {
     if (movers.length === 0) {
       return (
-        <p className="text-sm text-ink-muted">
-          Nothing moved much this week. That is a result too.
-        </p>
+        <div
+          className={`grid ${MOVER_CARD_HEIGHT} place-items-center rounded-card border border-dashed border-line px-4 text-center text-sm text-ink-muted`}
+        >
+          <p>Nothing moved much this week. That is a result too.</p>
+        </div>
       )
     }
 
@@ -29,7 +34,7 @@ export function WhatChanged({ insights }: { insights: Insights }) {
             <Link
               key={trend.metricId}
               to={`/metric/${trend.metricId}`}
-              className="rounded-card border border-line bg-surface-raised p-4 hover:border-ink-muted"
+              className={`${MOVER_CARD_HEIGHT} rounded-card border border-line bg-surface-raised p-4 hover:border-ink-muted`}
             >
               <div data-testid={`mover-${trend.metricId}`}>
                 <p className="text-sm text-ink-muted">{METRIC_LABELS[trend.metricId]}</p>
@@ -68,7 +73,7 @@ export function WhatChanged({ insights }: { insights: Insights }) {
         // A dashboard that shouts equally about everything communicates nothing,
         // so the metrics that held their line get one shared line, not four cards.
         <p className="mt-3 text-sm text-ink-muted">
-          steady: {insights.steady.map((id) => METRIC_LABELS[id].toLowerCase()).join(', ')}
+          Holding steady: {insights.steady.map((id) => METRIC_LABELS[id].toLowerCase()).join(', ')}
         </p>
       )}
     </section>
