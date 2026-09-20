@@ -1,5 +1,6 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": { "composite": true },
-  "include": ["."]
+  "//": "../../api is the Vercel function entry: it lives at the repository root because that is where Vercel looks, but it is this project's code and has to be typechecked with it.",
+  "include": [".", "../../api"]
 }

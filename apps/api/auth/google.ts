@@ -93,6 +93,8 @@ export function claimsFromIdToken(idToken: string): GoogleClaims {
     sub,
     email,
     name: typeof claims.name === 'string' ? claims.name : email,
-    picture: typeof claims.picture === 'string' ? claims.picture : undefined,
+    // Omitted rather than set to undefined: `picture` is optional, and under
+    // exactOptionalPropertyTypes those are not the same thing.
+    ...(typeof claims.picture === 'string' ? { picture: claims.picture } : {}),
   }
 }
