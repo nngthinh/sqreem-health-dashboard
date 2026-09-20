@@ -4,6 +4,7 @@
     "includes": ["**", "!**/dist", "!**/node_modules", "!**/.vercel", "!apps/api/db/migrations"]
   },
   "formatter": { "indentStyle": "space", "indentWidth": 2, "lineWidth": 100 },
+  "css": { "parser": { "tailwindDirectives": true } },
   "javascript": { "formatter": { "quoteStyle": "single", "semicolons": "asNeeded" } },
   "linter": {
     "enabled": true,
