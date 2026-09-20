@@ -1,5 +1,5 @@
 import { createHash, randomBytes } from 'node:crypto'
-import type { Env } from '../env'
+import type { Env } from '../env.js'
 
 /**
  * Google's OAuth flow, by hand. `arctic` was deprecated in July 2026 and its author's

@@ -2,26 +2,26 @@ import { timingSafeEqual } from 'node:crypto'
 import { eq } from 'drizzle-orm'
 import { Hono } from 'hono'
 import { deleteCookie, getCookie, setCookie } from 'hono/cookie'
-import type { AppBindings } from '../app'
-import { db } from '../db/client'
-import { users } from '../db/schema'
-import { getOrCreateFixedUser, upsertGoogleUser } from '../db/users'
-import type { Env } from '../env'
+import type { AppBindings } from '../app.js'
+import { db } from '../db/client.js'
+import { users } from '../db/schema.js'
+import { getOrCreateFixedUser, upsertGoogleUser } from '../db/users.js'
+import type { Env } from '../env.js'
 import {
   claimsFromIdToken,
   createAuthorizationUrl,
   exchangeCodeForIdToken,
   generateCodeVerifier,
   generateState,
-} from './google'
-import { DEMO_SUB, DEV_SUB } from './guard'
+} from './google.js'
+import { DEMO_SUB, DEV_SUB } from './guard.js'
 import {
   clearSessionCookie,
   createSession,
   destroySession,
   readSessionCookie,
   setSessionCookie,
-} from './session'
+} from './session.js'
 
 const attempts = new Map<string, { count: number; resetAt: number }>()
 

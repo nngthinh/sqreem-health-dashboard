@@ -1,9 +1,9 @@
 import { and, eq, gt } from 'drizzle-orm'
 import type { Context } from 'hono'
 import { deleteCookie, getSignedCookie, setSignedCookie } from 'hono/cookie'
-import { db } from '../db/client'
-import { sessions } from '../db/schema'
-import { env } from '../env'
+import { db } from '../db/client.js'
+import { sessions } from '../db/schema.js'
+import { env } from '../env.js'
 
 export const SESSION_COOKIE = 'hi_session'
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000

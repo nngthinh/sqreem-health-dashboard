@@ -1,6 +1,6 @@
 import { eq } from 'drizzle-orm'
-import { db } from './client'
-import { users } from './schema'
+import { db } from './client.js'
+import { users } from './schema.js'
 
 export type User = {
   id: string

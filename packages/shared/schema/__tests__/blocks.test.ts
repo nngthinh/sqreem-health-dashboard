@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { BlockKind, InsightBlockSchema, normaliseBlock } from '../blocks'
+import { BlockKind, InsightBlockSchema, normaliseBlock } from '../blocks.js'
 
 describe('InsightBlockSchema', () => {
   it('accepts a metric block with a legal range', () => {

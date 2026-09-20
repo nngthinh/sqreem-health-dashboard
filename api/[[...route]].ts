@@ -18,8 +18,8 @@ type Handler = (req: Request) => Response | Promise<Response>
  */
 async function boot(): Promise<Handler> {
   try {
-    const { assertBootable, env } = await import('../apps/api/env')
-    const { createApp } = await import('../apps/api/app')
+    const { assertBootable, env } = await import('../apps/api/env.js')
+    const { createApp } = await import('../apps/api/app.js')
     assertBootable(env)
     return handle(createApp(env))
   } catch (err) {

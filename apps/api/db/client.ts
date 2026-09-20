@@ -1,7 +1,7 @@
 import { neon } from '@neondatabase/serverless'
 import { drizzle as drizzleHttp, type NeonHttpDatabase } from 'drizzle-orm/neon-http'
-import { env } from '../env'
-import * as schema from './schema'
+import { env } from '../env.js'
+import * as schema from './schema.js'
 
 /**
  * Production runs on serverless functions, where a TCP pool is a classic

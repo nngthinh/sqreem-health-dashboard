@@ -1,9 +1,9 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
-import { authGuard } from './auth/guard'
-import { authRoutes } from './auth/routes'
-import type { Env } from './env'
+import { authGuard } from './auth/guard.js'
+import { authRoutes } from './auth/routes.js'
+import type { Env } from './env.js'
 
 export type AppBindings = { Variables: { userId: string; env: Env } }
 

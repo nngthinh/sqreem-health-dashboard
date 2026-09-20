@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { GoalIdSchema, MetricIdSchema } from './ids'
+import { GoalIdSchema, MetricIdSchema } from './ids.js'
 
 export enum WorkoutType {
   Walk = 'walk',

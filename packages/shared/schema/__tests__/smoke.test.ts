@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { METRIC_IDS } from '../ids'
+import { METRIC_IDS } from '../ids.js'
 
 describe('workspace wiring', () => {
   it('exposes the four metric ids', () => {

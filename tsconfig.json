@@ -1,7 +1,4 @@
 {
-  "//": "Vercel's function builder reads only this file's compilerOptions; without them it falls back to its own NodeNext defaults and rejects the extensionless relative imports in api/. Extending the base keeps its typecheck identical to ours.",
-  "extends": "./tsconfig.base.json",
-  "compilerOptions": { "noEmit": false },
   "files": [],
   "references": [
     { "path": "./packages/shared" },

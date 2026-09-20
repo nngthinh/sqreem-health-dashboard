@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { createApp } from '../app'
-import { parseEnv } from '../env'
+import { createApp } from '../app.js'
+import { parseEnv } from '../env.js'
 
 const env = parseEnv(process.env as Record<string, string | undefined>)
 

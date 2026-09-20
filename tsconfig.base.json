@@ -1,4 +1,5 @@
 {
+  "//": "Relative imports carry explicit .js extensions: Vercel typechecks the serverless function with its own NodeNext defaults, which reject extensionless specifiers, and bundler resolution accepts them either way.",
   "compilerOptions": {
     "target": "ES2023",
     "lib": ["ES2023", "DOM", "DOM.Iterable"],
