@@ -1,6 +1,7 @@
 import { Band, type SparkPoint } from '@health/shared/schema'
 import { Line, LineChart, ResponsiveContainer, YAxis } from 'recharts'
 import { chartColor } from '../../lib/chartColors'
+import { toChartPoints } from '../../lib/chartSeries'
 
 export function Sparkline({
   series,
@@ -11,9 +12,12 @@ export function Sparkline({
   tone?: Band
   height?: number
 }) {
+  // Unrecorded days are stored as null and plotted as 0, so the line stays continuous.
+  const points = toChartPoints(series)
+
   return (
     <ResponsiveContainer width="100%" height={height}>
-      <LineChart data={series} margin={{ top: 2, right: 0, bottom: 2, left: 0 }}>
+      <LineChart data={points} margin={{ top: 2, right: 0, bottom: 2, left: 0 }}>
         <YAxis hide domain={['dataMin', 'dataMax']} />
         <Line
           type="monotone"
@@ -22,8 +26,6 @@ export function Sparkline({
           strokeWidth={2}
           dot={false}
           isAnimationActive={false}
-          // A gap stays a gap: joining across it would draw a day that was never recorded.
-          connectNulls={false}
         />
       </LineChart>
     </ResponsiveContainer>
