@@ -8,7 +8,7 @@ const TOOL_LABELS: Record<string, string> = {
 
 export function ToolChip({ name }: { name: string }) {
   return (
-    <span className="inline-flex items-center gap-2 rounded-full border border-line px-3 py-1 text-xs text-ink-muted">
+    <span className="inline-flex animate-message-in items-center gap-2 self-start rounded-full border border-line px-3 py-1.5 text-xs text-ink-muted">
       <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-steady" aria-hidden="true" />
       {TOOL_LABELS[name] ?? 'Checking your data…'}
     </span>

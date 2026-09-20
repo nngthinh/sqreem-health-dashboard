@@ -124,7 +124,7 @@ export function ChatSurface({ conversationId }: { conversationId: string | null 
 
   return (
     <div className="flex h-full min-h-0">
-      <div className="hidden w-60 shrink-0 border-r border-line md:block">
+      <div className="hidden w-64 shrink-0 border-r border-line md:block">
         <ConversationList {...listProps} />
       </div>
 
@@ -134,7 +134,7 @@ export function ChatSurface({ conversationId }: { conversationId: string | null 
             type="button"
             aria-expanded={isListOpen}
             onClick={() => setIsListOpen((open) => !open)}
-            className="flex w-full items-center justify-between px-3 py-2 text-sm text-ink-muted"
+            className="flex w-full items-center justify-between px-4 py-3 text-sm text-ink-muted"
           >
             Your chats
             <ChevronDown
@@ -151,27 +151,30 @@ export function ChatSurface({ conversationId }: { conversationId: string | null 
           )}
         </div>
 
-        <div ref={scrollRef} className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4">
-          {!conversationId && <ChatStarter onPick={(message) => void handleSubmit(message)} />}
+        <div ref={scrollRef} className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+          {/* One column, the same width as the composer, so nothing shifts as it fills. */}
+          <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-5 px-4 py-6">
+            {!conversationId && <ChatStarter onPick={(message) => void handleSubmit(message)} />}
 
-          {conversationId && renderThread()}
+            {conversationId && renderThread()}
 
-          {streamingMessage.length > 0 && (
-            <MessageBubble role={MessageRole.Assistant} content={streamingMessage} />
-          )}
+            {streamingMessage.length > 0 && (
+              <MessageBubble role={MessageRole.Assistant} content={streamingMessage} />
+            )}
 
-          {toolActivity.map((name) => (
-            <ToolChip key={name} name={name} />
-          ))}
+            {toolActivity.map((name) => (
+              <ToolChip key={name} name={name} />
+            ))}
 
-          {status === StreamStatus.Error && (
-            <div role="alert" className="text-sm text-watch">
-              {error ?? 'The assistant stopped mid-answer.'}{' '}
-              <button type="button" className="underline" onClick={handleRetry}>
-                Retry
-              </button>
-            </div>
-          )}
+            {status === StreamStatus.Error && (
+              <div role="alert" className="animate-message-in text-sm text-watch">
+                {error ?? 'The assistant stopped mid-answer.'}{' '}
+                <button type="button" className="underline" onClick={handleRetry}>
+                  Retry
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Remounted when the seeded question changes, so a new ask replaces the draft. */}
@@ -196,7 +199,7 @@ const SUGGESTIONS = [
 /** An empty thread is mostly empty space, so the invitation sits in the middle of it. */
 function ChatStarter({ onPick }: { onPick: (message: string) => void }) {
   return (
-    <div className="m-auto max-w-xl space-y-3 text-center">
+    <div className="m-auto max-w-xl space-y-4 text-center">
       <p className="text-sm text-ink-muted">Ask about your own data.</p>
 
       <div className="flex flex-wrap justify-center gap-2">

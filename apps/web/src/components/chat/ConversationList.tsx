@@ -48,7 +48,7 @@ export function ConversationList({ activeId, onSelect, onNew, onDeleted }: Conve
   const renderList = () => {
     if (isError) {
       return (
-        <p className="px-2 py-3 text-sm text-ink-muted">
+        <p className="px-1 py-2 text-sm text-ink-muted">
           Couldn't load your chats.{' '}
           <button type="button" onClick={handleRetry} className="underline">
             Retry
@@ -58,7 +58,7 @@ export function ConversationList({ activeId, onSelect, onNew, onDeleted }: Conve
     }
 
     if (conversations.length === 0) {
-      return <p className="px-2 py-3 text-sm text-ink-muted">No chats yet.</p>
+      return <p className="px-1 py-2 text-sm text-ink-muted">No chats yet.</p>
     }
 
     return (
@@ -105,12 +105,12 @@ export function ConversationList({ activeId, onSelect, onNew, onDeleted }: Conve
       <button
         type="button"
         onClick={onNew}
-        className="m-2 rounded-md border border-line px-3 py-2 text-sm hover:bg-line/40"
+        className="m-3 rounded-md border border-line px-3 py-2 text-sm hover:bg-line/40"
       >
         New chat
       </button>
 
-      <div className="flex-1 overflow-y-auto px-2 pb-2">{renderList()}</div>
+      <div className="flex-1 overflow-y-auto px-3 pb-3">{renderList()}</div>
     </div>
   )
 }

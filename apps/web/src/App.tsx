@@ -26,6 +26,8 @@ function getPageTitle(pathname: string, me: Me | undefined) {
 export function App() {
   const { pathname } = useLocation()
 
+  const isChat = pathname.startsWith('/chats')
+
   const { data: me } = useGetMeQuery()
   const dispatch = useAppDispatch()
   const { sidebarCollapsed, drawerOpen } = useAppSelector((s) => s.ui)
@@ -42,7 +44,11 @@ export function App() {
 
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <Header title={getPageTitle(pathname, me)} />
-        <main className="flex-1 overflow-y-auto px-4 py-5">
+
+        {/* Chat owns its own gutters so its divider and composer reach the edges. */}
+        <main
+          className={isChat ? 'min-h-0 flex-1 overflow-hidden' : 'flex-1 overflow-y-auto px-4 py-5'}
+        >
           <Outlet />
         </main>
       </div>
